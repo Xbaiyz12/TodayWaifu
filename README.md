@@ -10,7 +10,7 @@
 <div align="center">
   <a href="https://github.com/Genshin-bots/gsuid_core">早柚核心</a> &nbsp;·&nbsp;
   <a href="https://blog.xlinxc.cn/posts/botplugin/todaywaifu-plugin-intro">详细文档</a> &nbsp;·&nbsp;
-  <a href="https://qm.qq.com/q/pJVt8HNwrg">交流 Q 群 (798949533)</a> &nbsp;·&nbsp;
+  <a href="https://qm.qq.com/q/pJVt8HNwrg">交流Q群</a> &nbsp;·&nbsp;
   <a href="https://github.com/MimoKit/TodayWaifu/issues">问题反馈</a>
 </div>
 
@@ -98,9 +98,9 @@ git clone https://github.com/MimoKit/TodayWaifu
 <table>
 <tbody>
   <tr>
-    <td align="center"><a href="https://github.com/MimoKit"><img src="https://avatars.githubusercontent.com/u/278909251?v=4&amp;size=64" width="56" height="56" alt="MimoKit" title="MimoKit" /></a><br /><sub><b>MimoKit</b></sub><br /><sub>183 contributions</sub></td>
+    <td align="center"><a href="https://github.com/MimoKit"><img src="https://avatars.githubusercontent.com/u/278909251?v=4&amp;size=64" width="56" height="56" alt="MimoKit" title="MimoKit" /></a><br /><sub><b>MimoKit</b></sub><br /><sub>184 contributions</sub></td>
     <td align="center"><a href="https://github.com/CWalkene"><img src="https://avatars.githubusercontent.com/u/52878114?v=4&amp;size=64" width="56" height="56" alt="CWalkene" title="CWalkene" /></a><br /><sub><b>CWalkene</b></sub><br /><sub>8 contributions</sub></td>
-    <td align="center"><a href="https://github.com/Xbaiyz12"><img src="https://avatars.githubusercontent.com/u/197220149?v=4&amp;size=64" width="56" height="56" alt="Xbaiyz12" title="Xbaiyz12" /></a><br /><sub><b>Xbaiyz12</b></sub><br /><sub>7 contributions</sub></td>
+    <td align="center"><a href="https://github.com/Xbaiyz12"><img src="https://avatars.githubusercontent.com/u/197220149?v=4&amp;size=64" width="56" height="56" alt="Xbaiyz12" title="Xbaiyz12" /></a><br /><sub><b>Xbaiyz12</b></sub><br /><sub>8 contributions</sub></td>
     <td align="center"><a href="https://github.com/xiaolinlino"><img src="https://avatars.githubusercontent.com/u/322805100?v=4&amp;size=64" width="56" height="56" alt="xiaolinlino" title="xiaolinlino" /></a><br /><sub><b>xiaolinlino</b></sub><br /><sub>7 contributions</sub></td>
     <td align="center"><a href="https://github.com/spaxie"><img src="https://avatars.githubusercontent.com/u/311188777?v=4&amp;size=64" width="56" height="56" alt="spaxie" title="spaxie" /></a><br /><sub><b>spaxie</b></sub><br /><sub>5 contributions</sub></td>
     <td align="center"><a href="https://github.com/KimigaiiWuyi"><img src="https://avatars.githubusercontent.com/u/55526518?v=4&amp;size=64" width="56" height="56" alt="KimigaiiWuyi" title="KimigaiiWuyi" /></a><br /><sub><b>KimigaiiWuyi</b></sub><br /><sub>1 contribution</sub></td>
