@@ -98,7 +98,7 @@ git clone https://github.com/MimoKit/TodayWaifu
 <table>
 <tbody>
   <tr>
-    <td align="center"><a href="https://github.com/MimoKit"><img src="https://avatars.githubusercontent.com/u/278909251?v=4&amp;size=64" width="56" height="56" alt="MimoKit" title="MimoKit" /></a><br /><sub><b>MimoKit</b></sub><br /><sub>184 contributions</sub></td>
+    <td align="center"><a href="https://github.com/MimoKit"><img src="https://avatars.githubusercontent.com/u/278909251?v=4&amp;size=64" width="56" height="56" alt="MimoKit" title="MimoKit" /></a><br /><sub><b>MimoKit</b></sub><br /><sub>186 contributions</sub></td>
     <td align="center"><a href="https://github.com/CWalkene"><img src="https://avatars.githubusercontent.com/u/52878114?v=4&amp;size=64" width="56" height="56" alt="CWalkene" title="CWalkene" /></a><br /><sub><b>CWalkene</b></sub><br /><sub>8 contributions</sub></td>
     <td align="center"><a href="https://github.com/Xbaiyz12"><img src="https://avatars.githubusercontent.com/u/197220149?v=4&amp;size=64" width="56" height="56" alt="Xbaiyz12" title="Xbaiyz12" /></a><br /><sub><b>Xbaiyz12</b></sub><br /><sub>8 contributions</sub></td>
     <td align="center"><a href="https://github.com/xiaolinlino"><img src="https://avatars.githubusercontent.com/u/322805100?v=4&amp;size=64" width="56" height="56" alt="xiaolinlino" title="xiaolinlino" /></a><br /><sub><b>xiaolinlino</b></sub><br /><sub>7 contributions</sub></td>
@@ -135,3 +135,22 @@ git clone https://github.com/MimoKit/TodayWaifu
 - 感谢 [wuyi](https://github.com/KimigaiiWuyi) 提供的插件帮助图UI设计
 - 本项目仅供学习与交流使用，严禁用于任何商业用途。
 - 本项目采用 **[GNU General Public License v3.0 (GPLv3)](./LICENSE)** 协议开源。
+
+### 丨关于内置台词文案的版权说明
+
+本插件为增强娱乐互动体验，内置了部分游戏与动漫作品的角色台词、文案及语音文本，涉及但不限于：
+
+- **《鸣潮》**（Wuthering Waves）—— 版权归 **库洛游戏（Kuro Games）** 所有
+- **《异环》**（NTE）—— 版权归 **完美世界（Perfect World）** 旗下 **Hotta Studio** 所有
+- **《战双帕弥什》**（Punishing: Gray Raven）—— 版权归 **库洛游戏（Kuro Games）** 所有
+- 以及其他动漫、番剧、游戏作品中的角色台词与相关文案 —— 版权归各自原作者、动画制作公司、出版社及发行商所有
+
+上述台词、文案、角色名称及相关内容的**著作权、版权及其他一切权利，均归其原作品版权方、开发商、发行商及原作者所有**。本插件仅在非商业性的娱乐互动场景中引用这些内容，**不以任何形式主张对上述素材的版权**，亦不代表与原版权方存在任何关联、合作或授权关系。
+
+若相关版权方认为本插件的内容引用侵犯了您的合法权益，请通过 [Issue](https://github.com/MimoKit/TodayWaifu/issues) 或交流群 **798949533** 联系我们，我们将在核实后第一时间删除或调整相关内容。
+
+## 丨版权©️
+
+- 本插件代码部分版权归 TodayWaifu 项目及贡献者所有，采用 GPLv3 协议开源。
+- 插件内置的游戏台词、动漫文案、角色名称及相关素材，版权归各自原版权方所有（详见上方「关于内置台词文案的版权说明」）。
+- 除另有说明外，本项目不拥有任何第三方游戏、动漫素材的版权。
