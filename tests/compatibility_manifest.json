@@ -476,6 +476,11 @@
       "decorator": "divorce_sv.on_fullmatch(PGR_DIVORCE_COMMANDS, block=True, to_ai='结束当前用户今天的战双老婆婚姻关系。\\n    当用户说“战双老婆离婚”“离婚战双老婆”时调用。\\n\\n    Args:\\n        text: 无需参数，留空即可\\n    ', covers=['结束今日战双老婆婚姻关系'], aliases=['今日老婆·战双老婆离婚'])"
     },
     {
+      "file": "TodayWaifu/divorce.py",
+      "function": "reroll_wife",
+      "decorator": "divorce_sv.on_fullmatch(REROLL_COMMANDS, block=True, to_ai=f'消耗 {_REROLL_COST} 积分删除当前老婆并重新抽取。\\n    当用户说“换老婆”“重新抽老婆”时调用。\\n\\n    Args:\\n        text: 无需参数，留空即可\\n    ', covers=['消耗积分重新抽取今日老婆'], aliases=['今日老婆·换老婆', '今日老婆·重新抽老婆'])"
+    },
+    {
       "file": "TodayWaifu/gift.py",
       "function": "gift_wife",
       "decorator": "gift_sv.on_prefix(('送老婆', '送今日老婆'), block=True, to_ai='把当前用户今天的老婆送给指定用户。\\n    当用户说“把我的老婆送给某人”“送老婆 @某人”时调用。\\n    Args:\\n        text: 目标用户，通常是 @用户 或用户 ID。\\n    ', covers=['把自己今日老婆赠送给他人，需对方确认'], aliases=['今日老婆·送老婆', '今日老婆·赠送老婆'])"
@@ -558,7 +563,7 @@
     {
       "file": "TodayWaifu/help.py",
       "function": "daily_wife_help",
-      "decorator": "help_sv.on_fullmatch(('今日老婆帮助', '老婆帮助'), block=True, to_ai='查看 TodayWaifu 今日老婆插件帮助。\\n    当用户问“今日老婆怎么用”“今日老婆帮助”“老婆插件有什么命令”时调用。\\n    Args:\\n        text: 无需参数，留空。\\n    ', covers=['插件全部指令与用法说明'], aliases=['今日老婆·帮助', '今日老婆·怎么用'])"
+      "decorator": "help_sv.on_fullmatch(('今日老婆帮助', '老婆帮助', '娱乐屋帮助', '娱乐帮助'), block=True, to_ai='查看 TodayWaifu 今日老婆插件帮助。\\n    当用户问“今日老婆怎么用”“今日老婆帮助”“老婆插件有什么命令”时调用。\\n    Args:\\n        text: 无需参数，留空。\\n    ', covers=['插件全部指令与用法说明'], aliases=['今日老婆·帮助', '今日老婆·怎么用'])"
     },
     {
       "file": "TodayWaifu/loli.py",
@@ -634,6 +639,16 @@
       "file": "TodayWaifu/rob.py",
       "function": "rob_shota_at",
       "decorator": "rob_sv.on_fullmatch(('抢正太', '抢今日正太'), block=True, to_ai='显示抢正太的用法。\\n    当用户只说“抢正太”但没有指定目标用户时调用。\\n    Args:\\n        text: 无需参数，留空。\\n    ', covers=['抢夺他人今日正太，按概率判定成败'], aliases=['今日老婆·抢正太'])"
+    },
+    {
+      "file": "TodayWaifu/rob.py",
+      "function": "rob_retry_wife",
+      "decorator": "rob_sv.on_prefix(ROB_RETRY_COMMANDS, block=True, to_ai=f'消耗 {_ROB_RETRY_COST} 积分绕过当日次数限制再抢一次老婆。\\n    当用户说“再抢老婆”“重新抢老婆”时调用，目标需在命令里艾特或用 ID 指定。\\n\\n    Args:\\n        text: 无需额外参数，目标从消息里的 @ 或用户 ID 解析\\n    ', covers=['消耗积分重试抢夺今日老婆'], aliases=['今日老婆·再抢老婆'])"
+    },
+    {
+      "file": "TodayWaifu/rob.py",
+      "function": "lock_wife",
+      "decorator": "rob_sv.on_fullmatch(LOCK_WIFE_COMMANDS, block=True, to_ai=f'消耗 {_LOCK_WIFE_COST} 积分锁定今日老婆，使其无法被他人抢夺。\\n    当用户说“锁定老婆”“保护老婆”时调用。\\n\\n    Args:\\n        text: 无需参数，留空即可\\n    ', covers=['消耗积分锁定今日老婆防止被抢'], aliases=['今日老婆·锁定老婆', '今日老婆·保护老婆'])"
     },
     {
       "file": "TodayWaifu/shota.py",

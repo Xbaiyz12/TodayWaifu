@@ -9,6 +9,7 @@
 本文件守护三条契约：未过期或未写入时不得重算；超过最小间隔后必须重算；COUNT 查询的
 判定列必须与旧实现（排除 stolen_from / gifted_from / safe）口径一致。
 """
+
 import ast
 import asyncio
 import unittest
@@ -19,11 +20,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _is_docstring(node: ast.stmt) -> bool:
-    return (
-        isinstance(node, ast.Expr)
-        and isinstance(node.value, ast.Constant)
-        and isinstance(node.value.value, str)
-    )
+    return isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)
+
+
 PLUGIN = ROOT / 'TodayWaifu'
 STATUS = PLUGIN / 'status.py'
 MODELS = PLUGIN / 'models.py'
@@ -182,9 +181,7 @@ class CountQueryTests(unittest.TestCase):
                 continue
             for item in node.body:
                 if isinstance(item, ast.AsyncFunctionDef) and item.name == 'count_daily_records':
-                    return '\n'.join(
-                        ast.unparse(stmt) for stmt in item.body if not _is_docstring(stmt)
-                    )
+                    return '\n'.join(ast.unparse(stmt) for stmt in item.body if not _is_docstring(stmt))
         raise AssertionError('count_daily_records not found')
 
     def test_count_uses_sql_aggregation_not_a_payload_scan(self) -> None:
@@ -212,7 +209,7 @@ class CountQueryTests(unittest.TestCase):
         等数字就会高于实际持有量，且偏差只在特定交互发生后出现，极难察觉。
         """
         source = MODELS.read_text(encoding='utf-8')
-        origin = source[source.index('def _record_origin('):source.index('def split_context_key(')]
+        origin = source[source.index('def _record_origin(') : source.index('def split_context_key(')]
         for marker in ('stolen_from', 'gifted_from', 'safe'):
             self.assertIn(marker, origin, marker)
 

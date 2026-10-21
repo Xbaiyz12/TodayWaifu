@@ -9,6 +9,7 @@ Core 的命令并发额度，造成无关命令一并被拖慢（见提交 1c0b5
 都收到异常（否则部分调用方以为写成功，内存快照随之与数据库分叉）。本文件即以这两点
 为核心展开，并额外锁定三条写入路径都已接入合并器、关停时会先排空待写批次。
 """
+
 import ast
 import sys
 import types
@@ -239,11 +240,7 @@ class CoalescingTests(unittest.TestCase):
                     await models.DailyWifeRecord.get_record(*seed_key),
                     seed_value,
                 )
-                self.assertIsNone(
-                    await models.DailyWifeRecord.get_record(
-                        '2026-09-24', 'bot1', 'g1', 'wives', 'u2'
-                    )
-                )
+                self.assertIsNone(await models.DailyWifeRecord.get_record('2026-09-24', 'bot1', 'g1', 'wives', 'u2'))
             finally:
                 await dispose()
 
@@ -434,7 +431,7 @@ class WiringTests(unittest.TestCase):
         # 三条路径（单条保存、批量保存、删除）都必须在同一处汇总后提交。
         for name in ('_save_daily_record', '_save_daily_records', '_delete_daily_record'):
             start = self.source.index(f'async def {name}(')
-            body = self.source[start:self.source.index('\n\n\n', start)]
+            body = self.source[start : self.source.index('\n\n\n', start)]
             self.assertIn('_submit_writes(', body, name)
 
     def test_submit_is_atomic_between_get_and_await(self) -> None:
@@ -445,16 +442,16 @@ class WiringTests(unittest.TestCase):
         断言仅在 ensure_task 之前的那段文本内检索 await。
         """
         body = self.source[
-            self.source.index('async def _submit_writes('):self.source.index('async def _save_daily_records(')
+            self.source.index('async def _submit_writes(') : self.source.index('async def _save_daily_records(')
         ]
-        before_await = body[:body.index('await batch.ensure_task()')]
+        before_await = body[: body.index('await batch.ensure_task()')]
         self.assertNotIn('await ', before_await.replace('async def', ''))
 
     def test_shutdown_flushes_pending_writes(self) -> None:
         # 关停时若只释放线程池而不排空待写批次，已返回成功但尚未提交的写入会随进程
         # 消失。合并引入了「写入已在批中、提交尚未发生」的窗口，必须由关停钩子补上。
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
-        hook = shared[shared.index('async def _stop_blocking_executor_on_shutdown('):]
+        hook = shared[shared.index('async def _stop_blocking_executor_on_shutdown(') :]
         self.assertIn('await flush_pending_writes()', hook)
 
     def test_models_expose_atomic_multi_context_apply(self) -> None:

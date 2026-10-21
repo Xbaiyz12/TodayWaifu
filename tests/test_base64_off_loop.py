@@ -10,6 +10,7 @@
 除行为断言外，另有一组源码文本断言：编码链路一旦被改回 `MessageSegment.image(...)`
 内联构造，行为测试仍可能通过，唯有文本检查能在合入前拦截。
 """
+
 import ast
 import sys
 import base64
@@ -51,9 +52,7 @@ def _load_encode_helper() -> Any:
     编码逻辑与线上实现将各自演化，断言不再指向真实代码。
     """
     tree = ast.parse(SENDERS.read_text(encoding='utf-8'))
-    node = next(
-        item for item in tree.body if isinstance(item, ast.FunctionDef) and item.name == '_encode_base64_ref'
-    )
+    node = next(item for item in tree.body if isinstance(item, ast.FunctionDef) and item.name == '_encode_base64_ref')
     future = ast.ImportFrom(module='__future__', names=[ast.alias(name='annotations')], level=0)
     module = ast.Module(body=[future, node], type_ignores=[])
     ast.fix_missing_locations(module)
@@ -71,19 +70,17 @@ class Base64RefTests(unittest.TestCase):
     def test_produces_a_framework_passthrough_ref(self) -> None:
         ref = encode_base64_ref(b'hello')
         self.assertTrue(ref.startswith('base64://'))
-        self.assertEqual(base64.b64decode(ref[len('base64://'):]), b'hello')
+        self.assertEqual(base64.b64decode(ref[len('base64://') :]), b'hello')
 
     def test_round_trips_binary_image_bytes(self) -> None:
         payload = bytes(range(256)) * 512
         ref = encode_base64_ref(payload)
-        self.assertEqual(base64.b64decode(ref[len('base64://'):]), payload)
+        self.assertEqual(base64.b64decode(ref[len('base64://') :]), payload)
 
     def test_encoding_happens_off_the_event_loop_thread(self) -> None:
         async def run() -> tuple[int, int]:
             loop_thread = threading.get_ident()
-            worker_thread = await executor.run_blocking(
-                lambda: threading.get_ident()
-            )
+            worker_thread = await executor.run_blocking(lambda: threading.get_ident())
             return loop_thread, worker_thread
 
         loop_thread, worker_thread = asyncio.run(run())
@@ -128,11 +125,11 @@ class SenderEncodingWiringTests(unittest.TestCase):
     # 故直接固定各发送路径的调用形态（含 `IS_UPLOAD` 分支的取舍）。
     def test_helpers_route_through_the_plugin_executor(self) -> None:
         source = SENDERS.read_text(encoding='utf-8')
-        helper = source[source.index('def _encode_base64_ref('):source.index('async def _image_message(')]
+        helper = source[source.index('def _encode_base64_ref(') : source.index('async def _image_message(')]
         self.assertIn('b64encode(data).decode()', helper)
 
         message_fn = source[
-            source.index('async def _image_message('):source.index('async def _image_message_from_path(')
+            source.index('async def _image_message(') : source.index('async def _image_message_from_path(')
         ]
         self.assertIn('run_blocking(_encode_base64_ref, data)', message_fn)
 
@@ -141,15 +138,15 @@ class SenderEncodingWiringTests(unittest.TestCase):
         # 预先编码会迫使框架先解码再重编码，属反向优化，因此该分支必须保留原始字节。
         source = SENDERS.read_text(encoding='utf-8')
         message_fn = source[
-            source.index('async def _image_message('):source.index('async def _image_message_from_path(')
+            source.index('async def _image_message(') : source.index('async def _image_message_from_path(')
         ]
         self.assertIn('if IS_UPLOAD:', message_fn)
         self.assertIn('return MessageSegment.image(data)', message_fn)
 
     def test_local_path_helper_reads_and_encodes_off_loop(self) -> None:
         source = SENDERS.read_text(encoding='utf-8')
-        fn = source[source.index('async def _image_message_from_path('):]
-        fn = fn[:fn.index('\n\n\n')]
+        fn = source[source.index('async def _image_message_from_path(') :]
+        fn = fn[: fn.index('\n\n\n')]
         self.assertIn('run_blocking(read_file_bytes_cached, path)', fn)
 
     def test_hot_path_senders_no_longer_build_image_segments_inline(self) -> None:
@@ -159,7 +156,7 @@ class SenderEncodingWiringTests(unittest.TestCase):
         for name in ('_send_role_image', '_send_loli_result_image', '_send_local_image'):
             start = source.index(f'async def {name}(')
             end = source.find('\nasync def ', start + 1)
-            block = source[start:end if end >= 0 else None]
+            block = source[start : end if end >= 0 else None]
             self.assertNotIn('MessageSegment.image(', block, f'{name} 仍在事件循环上构造图片段')
 
     def test_list_commands_also_use_the_off_loop_helper(self) -> None:

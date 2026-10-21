@@ -7,6 +7,7 @@
 本文件同时锁定字符串形式白名单的解析约定：Core 的配置项可能是字符串、列表或 None，
 因此必须容忍逗号、空格与换行混合的分隔方式，且比较前去除首尾空白。
 """
+
 import unittest
 import importlib.util
 from pathlib import Path

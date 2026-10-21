@@ -7,6 +7,7 @@
 本文件守护三条契约：容量裁剪按 mtime 从旧到新执行且不误删预算内的条目；裁剪必须同步
 维护已缓存 URL 索引与「0 表示不限制」的配置语义；容量上限必须真被维护循环接线调用。
 """
+
 import os
 import sys
 import time
@@ -123,9 +124,7 @@ class CacheBudgetTests(unittest.TestCase):
         # 目录缺失在首次启动或用户清理缓存后属正常状态，清理动作不应因此抛出异常、
         # 中断整个后台维护循环
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertEqual(
-                file_cache.enforce_cache_size_budget(Path(tmp) / 'nope', max_bytes=100), 0
-            )
+            self.assertEqual(file_cache.enforce_cache_size_budget(Path(tmp) / 'nope', max_bytes=100), 0)
 
     def test_cache_dir_bytes_reports_total(self) -> None:
         # 该函数是容量预算的唯一观测量；统计口径漏项会让裁剪判断与指标同时失真
@@ -141,7 +140,7 @@ class WiringTests(unittest.TestCase):
         # 逐段截取而非整文件匹配：只有落在维护循环体内，容量裁剪才会被周期性执行
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
         loop = shared[
-            shared.index('async def _cache_maintenance_once('):shared.index('async def _cache_maintenance_loop(')
+            shared.index('async def _cache_maintenance_once(') : shared.index('async def _cache_maintenance_loop(')
         ]
         self.assertIn('enforce_cache_size_budget', loop)
         self.assertIn('_gallery_cache_max_bytes()', loop)
@@ -154,7 +153,7 @@ class WiringTests(unittest.TestCase):
 
         # 配置读取的取值语义与裁剪逻辑共同构成「不限制」契约，任一侧改变都会误删缓存
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
-        fn = shared[shared.index('def _gallery_cache_max_bytes('):shared.index('def _record_retention_days(')]
+        fn = shared[shared.index('def _gallery_cache_max_bytes(') : shared.index('def _record_retention_days(')]
         self.assertIn('max(0, max_mb)', fn, '负数或 0 必须落到「不限制」而不是误删')
         self.assertIn('GALLERY_CACHE_MAX_MB', fn, '配置缺失时要回退到常量')
 

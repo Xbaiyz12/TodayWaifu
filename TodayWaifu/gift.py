@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import time
 
+from .points import _get_balance, _spend_points
 from .shared import (
     LOG_PREFIX,
     Bot,
@@ -212,9 +213,10 @@ async def _send_gift_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
         return await _safe_send(bot, f'你今天已经把{title}送出去了~')
     if state == 'divorced':
         return await _safe_send(bot, f'你今天已经和{title}离婚了，没有{title}可以送了~')
-    # 抢来或别人送的记录不再允许转送，防止同一对象在用户之间被无限接力。
-    if _is_secondhand_wife(giver_data):
-        return await _safe_send(bot, f'这个{title}是抢来或别人送的，不能再送出去哦~')
+    # 抢来或别人送的记录默认不允许转送，防止同一对象在用户之间被无限接力。
+    # 消耗 20 积分可突破此限制：在发起阶段扣费，接受阶段若状态失效则积分不退
+    # （与抢老婆失败消耗次数同理，避免无成本试探）。
+    _SECONDHAND_GIFT_COST = 20
 
     target_key = _user_key(ev, target_user_id)
     # 对方已有对象时直接拒绝：接受阶段还会再判一次，此处拦截可避免无谓的等待确认。
@@ -228,6 +230,19 @@ async def _send_gift_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
             bot,
             f'对方已经有一个待确认的送{title}请求，请等待处理或超时后再试~',
         )
+
+    # 扣费排在所有本地校验之后：对方已有对象、已有待确认请求都在此之前返回，
+    # 这些情况不该收二手转送费；扣费后仍可能因接受方放弃导致积分不退，属预期设计。
+    if _is_secondhand_wife(giver_data):
+        balance = await _get_balance(ev.user_id, ev.bot_id)
+        if balance < _SECONDHAND_GIFT_COST:
+            return await _safe_send(
+                bot,
+                f'这个{title}是抢来或别人送的，赠送需要 {_SECONDHAND_GIFT_COST} 积分，你还有 {balance} 分。',
+            )
+        spent = await _spend_points(ev.user_id, ev.bot_id, _SECONDHAND_GIFT_COST)
+        if not spent:
+            return await _safe_send(bot, '兑换失败，积分可能刚刚被用掉了，稍后再试试。')
 
     _set_pending_gift(ev, target_user_id, giver_id, kind)
     giver_name = name_from_event(ev, giver_id)
@@ -293,8 +308,7 @@ async def _accept_gift_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
             response = f'对方已经把{title}送给别人了，赠送已失效~'
         elif state == 'divorced':
             response = f'对方已经和{title}离婚了，赠送已失效~'
-        elif _is_secondhand_wife(giver_data):
-            response = f'这个{title}是抢来或别人送的，不能再送出去，赠送已失效~'
+        # 二手老婆赠送已在发起阶段扣费，接受阶段不再拦截。
         elif _has_active_wife(context[bucket].get(target_user_id)):
             # 接受方在等待期间自己抽到了对象，此时接受会造成一人持有两份记录。
             response = f'你现在已经有{title}了，不需要接受赠送啦~'

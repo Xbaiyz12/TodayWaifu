@@ -3,6 +3,7 @@
 本模块只负责把远程图库响应转成候选角色，不注册任何命令：普通老婆由「今日老婆」共用同一
 套抽取与每日唯一性流程，仅在开关开启时替换候选池，因此这里不设独立指令入口。
 """
+
 from __future__ import annotations
 
 from urllib.error import URLError, HTTPError
@@ -62,11 +63,7 @@ def _parse_normal_gallery_candidates(
         if not isinstance(role_ids_data, list):
             continue
         # 过滤空白标识后重建为元组：标识会写入记录并参与二手判定，不能含空串
-        role_ids = tuple(
-            str(role_id).strip()
-            for role_id in role_ids_data
-            if str(role_id).strip()
-        )
+        role_ids = tuple(str(role_id).strip() for role_id in role_ids_data if str(role_id).strip())
         if not role_ids:
             continue
 

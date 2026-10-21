@@ -10,7 +10,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED = {
-    "ICON.png": ((1024, 1024), "RGBA"),
+    'ICON.png': ((1024, 1024), 'RGBA'),
 }
 
 
@@ -27,5 +27,5 @@ class ResourceIntegrityTests(unittest.TestCase):
                 self.assertEqual(image.mode, mode, relative)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

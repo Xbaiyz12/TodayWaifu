@@ -12,8 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def _extract_function(filename, name, namespace):
     tree = ast.parse((ROOT / 'TodayWaifu' / filename).read_text(encoding='utf-8-sig'))
     function = next(
-        node for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
     )
     module = ast.Module(
         body=[
@@ -127,21 +126,23 @@ class SafeWifeDivorceTests(unittest.IsolatedAsyncioTestCase):
         self.messages.assert_awaited_once_with(self.bot, '已经和今天的群友离婚：群友B。')
 
     def _daily(self):
-        self.namespace.update({
-            '_daily_item_title': lambda mode: '老婆',
-            '_is_master': lambda ev: False,
-            '_cfg_bool': lambda key, default: False,
-            '_can_specify_wife': lambda ev: False,
-            '_normalize_role_name': lambda name: name,
-            '_get_other_daily_wife_name': AsyncMock(return_value=None),
-            '_record_from_dict': Mock(return_value=SimpleNamespace(name='新老婆')),
-            '_send_record_image': AsyncMock(),
-            '_load_candidates': AsyncMock(return_value=([object()], None)),
-            '_daily_rng': Mock(),
-            '_filter_by_mode': lambda candidates, mode: candidates,
-            '_pick_role_record': Mock(return_value=SimpleNamespace(name='候选老婆')),
-            '_record_to_dict': Mock(return_value={'name': '候选老婆', 'safe': True}),
-        })
+        self.namespace.update(
+            {
+                '_daily_item_title': lambda mode: '老婆',
+                '_is_master': lambda ev: False,
+                '_cfg_bool': lambda key, default: False,
+                '_can_specify_wife': lambda ev: False,
+                '_normalize_role_name': lambda name: name,
+                '_get_other_daily_wife_name': AsyncMock(return_value=None),
+                '_record_from_dict': Mock(return_value=SimpleNamespace(name='新老婆')),
+                '_send_record_image': AsyncMock(),
+                '_load_candidates': AsyncMock(return_value=([object()], None)),
+                '_daily_rng': Mock(),
+                '_filter_by_mode': lambda candidates, mode: candidates,
+                '_pick_role_record': Mock(return_value=SimpleNamespace(name='候选老婆')),
+                '_record_to_dict': Mock(return_value={'name': '候选老婆', 'safe': True}),
+            }
+        )
         return _extract_function('daily.py', '_send_daily_wife', self.namespace)
 
     async def test_divorced_compensation_is_not_displayed_or_redrawn(self):

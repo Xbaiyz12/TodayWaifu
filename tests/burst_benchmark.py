@@ -44,6 +44,7 @@
     无关命令等待额度 max   11455.2 ms    825.8 ms
     全部 200 张图送达      13.10 s       12.93 s
 """
+
 from __future__ import annotations
 
 import sys
@@ -58,8 +59,8 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from concurrent.futures import ThreadPoolExecutor
 
 PORT = 8899
-IMAGE_DELAY = 0.5          # 单张图片的模拟网络耗时；须大于零，否则并发争用不可观测
-COMMAND_SEMAPHORE = 25     # 对齐框架 CommandSemaphore 默认值，偏离将改变额度耗尽的临界并发
+IMAGE_DELAY = 0.5  # 单张图片的模拟网络耗时；须大于零，否则并发争用不可观测
+COMMAND_SEMAPHORE = 25  # 对齐框架 CommandSemaphore 默认值，偏离将改变额度耗尽的临界并发
 COMPETING_PROBE_INTERVAL = 0.05
 
 
@@ -148,9 +149,7 @@ async def prepare_db() -> object:
     BM._db_type = 'sqlite'
     BM._db_initialized = True
     async with engine.begin() as conn:
-        await conn.run_sync(
-            lambda c: SQLModel.metadata.create_all(c, tables=[M.DailyWifeRecord.__table__])
-        )
+        await conn.run_sync(lambda c: SQLModel.metadata.create_all(c, tables=[M.DailyWifeRecord.__table__]))
     return M
 
 
@@ -174,10 +173,7 @@ async def run(n_draws: int, plugin_parent: str, warm: bool = False, with_db: boo
         from TodayWaifu.TodayWaifu import daily_store as store
 
         await prepare_db()
-        events = [
-            Event(bot_id='bot1', user_id=f'u{i}', group_id='g1', real_bot_id='bot1')
-            for i in range(n_draws)
-        ]
+        events = [Event(bot_id='bot1', user_id=f'u{i}', group_id='g1', real_bot_id='bot1') for i in range(n_draws)]
         record_value = {'name': '今汐', 'role_ids': ['1304'], 'image': 'x', 'record_type': 'role'}
 
     sent: list[int] = []
@@ -191,10 +187,7 @@ async def run(n_draws: int, plugin_parent: str, warm: bool = False, with_db: boo
 
     bot = FakeBot()
     urls = [f'http://127.0.0.1:{PORT}/img/unique_{i}.png' for i in range(n_draws)]
-    roles = [
-        SimpleNamespace(name=f'角色{i}', role_ids=(str(1000 + i),), images=(urls[i],))
-        for i in range(n_draws)
-    ]
+    roles = [SimpleNamespace(name=f'角色{i}', role_ids=(str(1000 + i),), images=(urls[i],)) for i in range(n_draws)]
 
     if warm:
         # 复现 23:50 预热完成之后的 00:00：先把图片写入磁盘缓存，使突发阶段
@@ -223,15 +216,13 @@ async def run(n_draws: int, plugin_parent: str, warm: bool = False, with_db: boo
 
     async def draw(index: int) -> None:
         started = time.perf_counter()
-        async with sem:                       # 命令协程在此持有 Core 的并发额度
+        async with sem:  # 命令协程在此持有 Core 的并发额度
             # 自进入临界区起计时：持锁时长决定其他命令的排队深度，是 Core 过载的直接度量；
             # 包含额度等待的外层耗时只反映本命令的用户体验，两者不可混用。
             entered = time.perf_counter()
             if with_db:
                 await store._save_daily_record(events[index], 'wives', f'u{index}', record_value)
-            await S._send_role_image(
-                bot, roles[index], urls[index], '文字', index, True, 'wife'
-            )
+            await S._send_role_image(bot, roles[index], urls[index], '文字', index, True, 'wife')
             occupancies.append(time.perf_counter() - entered)
         latencies.append(time.perf_counter() - started)
 

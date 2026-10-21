@@ -6,6 +6,7 @@
 本文件锁定两处关键取舍：清理必须可关闭且以 ISO 日期字符串做比较；指标采集必须严格只读，
 否则观测动作本身会改变被观测对象的状态。
 """
+
 import ast
 import unittest
 from typing import Any
@@ -50,9 +51,7 @@ class RetentionTests(unittest.TestCase):
         # 非正数须整体短路并直接返回，而不是以负天数计算裁剪点：后者会算出未来日期，
         # 把全部历史记录一次删空。
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
-        fn = shared[
-            shared.index('async def _prune_old_daily_records('):shared.index('def _record_retention_days(')
-        ]
+        fn = shared[shared.index('async def _prune_old_daily_records(') : shared.index('def _record_retention_days(')]
         self.assertIn('if retention_days <= 0:', fn)
         self.assertIn('return', fn)
 
@@ -61,9 +60,7 @@ class RetentionTests(unittest.TestCase):
         # 两侧格式必须严格一致，否则字符串比较会得到错误的大小关系。
         # 以本机当天而非 UTC 计算，是为与记录写入时使用的日期口径保持同源。
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
-        fn = shared[
-            shared.index('async def _prune_old_daily_records('):shared.index('def _record_retention_days(')
-        ]
+        fn = shared[shared.index('async def _prune_old_daily_records(') : shared.index('def _record_retention_days(')]
         self.assertIn('timedelta(days=retention_days)', fn)
         self.assertIn('.isoformat()', fn)
         self.assertIn('DailyWifeRecord.delete_before(cutoff)', fn)
@@ -73,7 +70,7 @@ class RetentionTests(unittest.TestCase):
         # 且因删除逻辑「看起来存在」而难以发现。
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
         loop = shared[
-            shared.index('async def _cache_maintenance_once('):shared.index('async def _cache_maintenance_loop(')
+            shared.index('async def _cache_maintenance_once(') : shared.index('async def _cache_maintenance_loop(')
         ]
         self.assertIn('await _prune_old_daily_records()', loop)
 
@@ -81,7 +78,7 @@ class RetentionTests(unittest.TestCase):
         # 以字符串小于比较而非日期函数删除：ISO 日期（YYYY-MM-DD）定宽，字典序与时间序
         # 一致，因此可直接走索引；一旦 day 列改为其它日期格式，该比较会静默删错范围。
         source = (PLUGIN / 'models.py').read_text(encoding='utf-8')
-        fn = source[source.index('async def delete_before('):source.index('async def get_record(')]
+        fn = source[source.index('async def delete_before(') : source.index('async def get_record(')]
         self.assertIn('delete(cls)', fn)
         self.assertIn('cls.day < cutoff_day', fn)
 
@@ -89,7 +86,7 @@ class RetentionTests(unittest.TestCase):
         # 配置读取失败（空值、非数字）须回落到常量而非抛错或按 0 处理：
         # 抛错会让整个维护循环中断，按 0 处理则会静默变成永久保留，两种后果都不可见。
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
-        fn = shared[shared.index('def _record_retention_days('):shared.index('async def _cache_maintenance_once(')]
+        fn = shared[shared.index('def _record_retention_days(') : shared.index('async def _cache_maintenance_once(')]
         self.assertIn("int(_cfg('DailyWifeRecordRetentionDays'))", fn)
         self.assertIn('return DAILY_RECORD_RETENTION_DAYS', fn)
 
@@ -120,7 +117,7 @@ class MetricsTests(unittest.TestCase):
         # 采集不能改状态、不能触发网络或数据库：await 会引入挂起点，清除与弹出操作会
         # 直接改动被观测缓存（采集本身成为淘汰原因），日志调用则会在采集失败时递归。
         source = (PLUGIN / 'metrics.py').read_text(encoding='utf-8')
-        collect = source[source.index('def collect_metrics('):source.index('def log_metrics(')]
+        collect = source[source.index('def collect_metrics(') : source.index('def log_metrics(')]
         # 采集不能改状态、不能触发网络或数据库
         for forbidden in ('await ', '.clear()', '.pop(', 'logger.'):
             self.assertNotIn(forbidden, collect, forbidden)
@@ -130,7 +127,7 @@ class MetricsTests(unittest.TestCase):
         # 可观测性等于未启用。
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
         loop = shared[
-            shared.index('async def _cache_maintenance_once('):shared.index('async def _cache_maintenance_loop(')
+            shared.index('async def _cache_maintenance_once(') : shared.index('async def _cache_maintenance_loop(')
         ]
         self.assertIn('log_metrics()', loop)
 
@@ -138,7 +135,7 @@ class MetricsTests(unittest.TestCase):
         # 熔断状态必须经只读接口查询：allow() 会推进半开状态并消费一次探测机会，
         # 仅采集指标这一动作即可让冷却期失效，使断路器提前放行。
         source = (PLUGIN / 'gallery.py').read_text(encoding='utf-8')
-        fn = source[source.index('def gallery_circuit_state('):source.index('def _retry_delay(')]
+        fn = source[source.index('def gallery_circuit_state(') : source.index('def _retry_delay(')]
         self.assertIn('_HTTP_BREAKER.is_open(key)', fn)
         self.assertIn('_HTTP_BREAKER.retry_after(key)', fn)
 

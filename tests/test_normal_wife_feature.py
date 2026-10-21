@@ -35,10 +35,7 @@ def _extract_function(path: Path, name: str, globals_dict: dict[str, Any]):
     # 注入的全局名是函数体的隐式输入，缺失会直接抛 NameError。
     tree = ast.parse(path.read_text(encoding='utf-8-sig'))
     function = next(
-        node
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name == name
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
     )
     future = ast.ImportFrom(
         module='__future__',
@@ -194,6 +191,7 @@ class NormalWifeFeatureTests(unittest.IsolatedAsyncioTestCase):
         local_role_9999 = _FakeRoleCandidate('折枝', ('9999',), ('/local/zhezhi.png',))
 
         from unittest.mock import MagicMock
+
         fake_logger = MagicMock()
         fake_time = MagicMock()
         fake_time.time.return_value = 1000.0

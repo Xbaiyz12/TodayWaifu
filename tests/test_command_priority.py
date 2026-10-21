@@ -45,7 +45,6 @@ class CommandPriorityTests(unittest.TestCase):
         self.assertIn('from .help import daily_wife_help', source)
         self.assertIn('return await daily_wife_help(bot, ev)', source)
 
-
     def test_help_passes_command_icon_directory_to_renderer(self) -> None:
         source = (ROOT / 'TodayWaifu' / 'help.py').read_text(encoding='utf-8-sig')
         # 图标目录须经 extra 注入渲染器：渲染层不感知插件安装位置，路径只能由调用方提供

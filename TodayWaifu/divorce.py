@@ -4,8 +4,10 @@
 使当天的重复离婚、被抢、被送等判断仍能读到记录本身。若直接删除记录，后续命令将
 无法区分「今天没抽过」与「抽过但已离婚」，只能给出错误提示。
 """
+
 from __future__ import annotations
 
+from .points import _get_balance, _spend_points
 from .shared import (
     LOG_PREFIX,
     Bot,
@@ -83,10 +85,7 @@ async def _send_divorce(bot: Bot, ev: Event, kind: str) -> None:
         'nte': '异环老婆',
         'pgr': '战双老婆',
     }[kind]
-    logger.info(
-        f'{LOG_PREFIX} 用户 {ev.user_id} 在群 {ev.group_id or "direct"} '
-        f'发起{title}离婚'
-    )
+    logger.info(f'{LOG_PREFIX} 用户 {ev.user_id} 在群 {ev.group_id or "direct"} 发起{title}离婚')
 
     response: str | None = None
     result_name = ''
@@ -98,15 +97,14 @@ async def _send_divorce(bot: Bot, ev: Event, kind: str) -> None:
         bucket_name = _daily_bucket_name(kind)
         bucket = context[bucket_name]
         record = bucket.get(user_key)
+        item_title = title
         # 补偿老婆另存于 safe_wives；旧记录仅用于保留被抢历史，不能作为离婚对象。
         if kind == 'wife' and isinstance(record, dict) and record.get('stolen_by'):
             safe_record = context['safe_wives'].get(user_key)
             if isinstance(safe_record, dict) and str(safe_record.get('name') or '').strip():
                 bucket_name = 'safe_wives'
                 record = safe_record
-        cmd_text = str(
-            getattr(ev, 'command', '') or getattr(ev, 'text', '') or getattr(ev, 'raw_text', '')
-        ).strip()
+        cmd_text = str(getattr(ev, 'command', '') or getattr(ev, 'text', '') or getattr(ev, 'raw_text', '')).strip()
         is_member_cmd = kind == 'wife' and '群友' in cmd_text
         if is_member_cmd:
             marry_record = context.get('marry_members', {}).get(user_key)
@@ -159,7 +157,7 @@ async def _send_divorce(bot: Bot, ev: Event, kind: str) -> None:
             result_name = _divorce_result_name(kind, str(record['name']))
 
     # 消息发送放在锁外：网络往返耗时不可控，持锁发送会阻塞同上下文的所有命令
-    #（包括抽卡与赠送），把这些请求一起拖慢。
+    # （包括抽卡与赠送），把这些请求一起拖慢。
     if response is not None:
         return await _safe_send(bot, response)
     await _safe_send(bot, f'已经和今天的{item_title}离婚：{result_name}。')
@@ -258,3 +256,59 @@ async def divorce_nte(bot: Bot, ev: Event) -> None:
 )
 async def divorce_pgr(bot: Bot, ev: Event) -> None:
     await _send_divorce(bot, ev, 'pgr')
+
+
+# 换老婆：消耗 10 积分删除当前老婆记录并重新抽取。与离婚不同，离婚后当天不能再抽，
+# 换老婆则直接重抽——通过删除记录使 _send_daily_wife 走新建分支。
+_REROLL_COST = 10
+
+REROLL_COMMANDS = (
+    '换老婆',
+    '换今日老婆',
+    '重新抽老婆',
+    '换个老婆',
+)
+
+
+async def _send_reroll_wife(bot: Bot, ev: Event) -> None:
+    """换老婆：扣 10 积分、删除当前老婆记录、触发重抽。"""
+    from .daily import _send_daily_wife
+
+    user_key = _user_key(ev)
+    context = await _load_daily_context(ev)
+    bucket = _daily_bucket_name('wife')
+    current = context[bucket].get(user_key)
+
+    if not isinstance(current, dict) or _wife_state(current) != 'owned':
+        return await _safe_send(bot, '你今天还没有老婆，先抽一个再换吧～')
+
+    balance = await _get_balance(ev.user_id, ev.bot_id)
+    if balance < _REROLL_COST:
+        return await _safe_send(bot, f'积分不够哦，换老婆需要 {_REROLL_COST} 分，你还有 {balance} 分。')
+
+    spent = await _spend_points(ev.user_id, ev.bot_id, _REROLL_COST)
+    if not spent:
+        return await _safe_send(bot, '兑换失败，积分可能刚刚被用掉了，稍后再试试。')
+
+    # 删除记录而非标记离婚，使 _send_daily_wife 走新建分支。
+    async with _daily_context_lock(ev):
+        await _save_daily_records(ev, [], deletes=[(bucket, user_key)])
+
+    await _safe_send(bot, f'已消耗 {_REROLL_COST} 积分，正在为你重新抽取老婆…')
+    await _send_daily_wife(bot, ev, 'wife')
+
+
+@divorce_sv.on_fullmatch(
+    REROLL_COMMANDS,
+    block=True,
+    to_ai=f"""消耗 {_REROLL_COST} 积分删除当前老婆并重新抽取。
+    当用户说“换老婆”“重新抽老婆”时调用。
+
+    Args:
+        text: 无需参数，留空即可
+    """,
+    covers=['消耗积分重新抽取今日老婆'],
+    aliases=['今日老婆·换老婆', '今日老婆·重新抽老婆'],
+)
+async def reroll_wife(bot: Bot, ev: Event) -> None:
+    await _send_reroll_wife(bot, ev)

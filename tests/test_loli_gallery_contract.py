@@ -8,6 +8,7 @@
 解析失败一律抛 `RuntimeError` 而非静默降级：载荷契约漂移时宁可当天明确报错，也不把半成品
 记录写进每日上下文，否则错误会在整天内被反复读取。
 """
+
 import ast
 import unittest
 from typing import Any
@@ -21,11 +22,7 @@ def _extract_function(name: str, globals_dict: dict[str, Any]) -> Any:
     # 按源码抽出单个函数执行，而非导入 loli 模块：该模块依赖 gsuid_core（测试环境未安装）。
     # 抽取而非在测试内重写实现，可保证断言始终指向线上代码本身。
     tree = ast.parse(LOLI_PATH.read_text(encoding='utf-8-sig'))
-    function = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == name
-    )
+    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
     future = ast.ImportFrom(
         module='__future__',
         names=[ast.alias(name='annotations')],

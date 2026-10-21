@@ -44,7 +44,7 @@ def _load_bundled_quotes() -> Tuple[dict[str, tuple[str, ...]], tuple[str, ...]]
     # 解析失败时返回上一次成功的缓存而非空结果：已加载过的台词不会因为一次读取
     # 抖动而全部消失，最坏情况是继续沿用旧内容。
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding='utf-8'))
     except (json.JSONDecodeError, OSError):
         return _QUOTES_CACHE, _DEFAULT_QUOTES_CACHE
 
@@ -52,8 +52,8 @@ def _load_bundled_quotes() -> Tuple[dict[str, tuple[str, ...]], tuple[str, ...]]
     if not isinstance(data, dict):
         return _QUOTES_CACHE, _DEFAULT_QUOTES_CACHE
 
-    raw_quotes = data.get("role_quotes")
-    raw_default = data.get("default_quotes")
+    raw_quotes = data.get('role_quotes')
+    raw_default = data.get('default_quotes')
 
     quotes: dict[str, tuple[str, ...]] = {}
     if isinstance(raw_quotes, dict):
@@ -98,7 +98,7 @@ def get_role_quote(name: str) -> str:
         matched_name = clean_name
 
     if not quotes:
-        return ""
+        return ''
 
     selected = random.choice(quotes)
     # 截断仅用于兜底：内置库已控制在限长内，此处防止手工编辑库文件后出现超长台词
@@ -106,13 +106,13 @@ def get_role_quote(name: str) -> str:
     if len(selected) > MAX_QUOTE_LENGTH:
         selected = selected[:MAX_QUOTE_LENGTH]
 
-    quote_line = f"「{selected}」"
-    author_line = f"——{matched_name}"
+    quote_line = f'「{selected}」'
+    author_line = f'——{matched_name}'
 
     # 手机QQ群单行气泡上限约为15字宽，固定为14可确保署名紧贴右侧且不被强制换行
     # 用全角空格填充而非半角：气泡按字宽排版，半角空格的实际占位与字符数不成正比，
     # 无法据此推算右对齐所需宽度。
     target_width = 14
     author_width = len(author_line)
-    spaces = "\u3000" * max(0, target_width - author_width)
-    return f"{quote_line}\n{spaces}{author_line}"
+    spaces = '\u3000' * max(0, target_width - author_width)
+    return f'{quote_line}\n{spaces}{author_line}'

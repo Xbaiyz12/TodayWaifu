@@ -7,6 +7,7 @@
 本文件守护由此引入的合约：连续失败达阈值即熔断并按主机隔离，冷却结束仅放行一个探测
 请求且探测失败立即重新熔断；认证与限流类错误属于客户端侧条件，须直接抛出而不计入熔断。
 """
+
 import ast
 import sys
 import unittest
@@ -174,9 +175,7 @@ class RetryPolicyTests(unittest.TestCase):
 
     def test_gallery_http_helper_consults_the_breaker(self) -> None:
         source = (PLUGIN / 'gallery.py').read_text(encoding='utf-8')
-        helper = source[
-            source.index('def _http_get_with_retry('):source.index('def _fetch_gallery_payload_sync(')
-        ]
+        helper = source[source.index('def _http_get_with_retry(') : source.index('def _fetch_gallery_payload_sync(')]
         # 熔断器只有在请求前后都被调用才生效：缺 allow 等于没有闸门，缺 record_* 则
         # 永远无法触发熔断
         self.assertIn('_HTTP_BREAKER.allow(key)', helper)
@@ -187,9 +186,9 @@ class RetryPolicyTests(unittest.TestCase):
 
     def test_retry_delay_uses_exponential_backoff_with_jitter(self) -> None:
         source = (PLUGIN / 'gallery.py').read_text(encoding='utf-8')
-        fn = source[source.index('def _retry_delay('):source.index('def _http_get_with_retry(')]
+        fn = source[source.index('def _retry_delay(') : source.index('def _http_get_with_retry(')]
         # 指数退避拉开重试间隔，抖动打散同时重试的请求；封顶则防止退避时间失控
-        self.assertIn('2 ** attempt', fn)
+        self.assertIn('2**attempt', fn)
         self.assertIn('random.uniform', fn)
         self.assertIn('min(base, RETRY_MAX_DELAY_SECONDS)', fn)
 
@@ -201,26 +200,22 @@ class RetryPolicyTests(unittest.TestCase):
         回退本地，用户看到的是「图库挂了」。
         """
         source = (PLUGIN / 'gallery.py').read_text(encoding='utf-8')
-        helper = source[
-            source.index('def _http_get_with_retry('):source.index('def _fetch_gallery_payload_sync(')
-        ]
+        helper = source[source.index('def _http_get_with_retry(') : source.index('def _fetch_gallery_payload_sync(')]
         # 截断到分支起始处做局部匹配：源码扫描需限定在该分支内，避免匹配到文件其它位置
         marker = 'if exc.code in {401, 403, 429}:'
         self.assertIn(marker, helper, '认证/限流错误必须走直接抛出分支')
-        auth_branch = helper[helper.index(marker):]
+        auth_branch = helper[helper.index(marker) :]
         self.assertIn('raise', auth_branch[:120])
 
     def test_throttled_response_does_not_trip_the_breaker(self) -> None:
         """429 必须与 401/403 同等对待：直接抛出，不计入熔断失败。"""
         source = (PLUGIN / 'gallery.py').read_text(encoding='utf-8')
-        helper = source[
-            source.index('def _http_get_with_retry('):source.index('def _fetch_gallery_payload_sync(')
-        ]
+        helper = source[source.index('def _http_get_with_retry(') : source.index('def _fetch_gallery_payload_sync(')]
         marker = 'if exc.code in {401, 403, 429}:'
         self.assertIn(marker, helper, '429 必须走直接抛出分支')
 
         # 该分支内只应有 raise，不能出现把失败记给熔断器的调用
-        branch = helper[helper.index(marker):]
+        branch = helper[helper.index(marker) :]
         self.assertIn('raise', branch[:120])
         self.assertNotIn('record_failure', branch[:120])
 

@@ -4,6 +4,7 @@
 `_image_source('pgr')` 在本地目录与远程图库之间取舍。无论来源如何，记录都写入独立的
 pgr 分桶（与鸣潮、异环相互独立），并在同一用户当天已有持有记录时拒绝重复抽取。
 """
+
 from __future__ import annotations
 
 from .daily import _build_text
@@ -136,11 +137,7 @@ def _pgr_candidates_by_name(
 ) -> tuple[RoleCandidate, ...]:
     # 归一化后整体比较：不同来源对间隔号的写法不一致，逐字比较会把同一角色判成两个
     target = _normalize_role_name(specified_name).casefold()
-    return tuple(
-        candidate
-        for candidate in candidates
-        if _normalize_role_name(candidate.name).casefold() == target
-    )
+    return tuple(candidate for candidate in candidates if _normalize_role_name(candidate.name).casefold() == target)
 
 
 def _stored_pgr_record(raw: object) -> WifeRecord | None:
@@ -158,9 +155,7 @@ def _stored_pgr_record(raw: object) -> WifeRecord | None:
     return record
 
 
-async def _ensure_daily_pgr_wife_record(
-    ev: Event, specified_role: 'RoleCandidate | None' = None
-) -> WifeRecord | None:
+async def _ensure_daily_pgr_wife_record(ev: Event, specified_role: 'RoleCandidate | None' = None) -> WifeRecord | None:
     key = _user_key(ev)
     bucket = _daily_bucket_name('pgr')
     context = await _load_daily_context(ev)
@@ -237,9 +232,7 @@ async def _send_daily_pgr_wife(
         )
 
     if specified_name and not is_transient_draw:
-        matched = _pgr_candidates_by_name(
-            await _load_pgr_wife_candidates(), specified_name
-        )
+        matched = _pgr_candidates_by_name(await _load_pgr_wife_candidates(), specified_name)
         if not matched:
             return await _safe_send(
                 bot,
@@ -294,8 +287,7 @@ async def _send_daily_pgr_wife(
         root = _pgr_wife_root()
         return await _safe_send(
             bot,
-            '战双老婆图库里还没有可用图片。\n'
-            f'把图片放成“{root}\\角色名\\图片文件”即可。',
+            f'战双老婆图库里还没有可用图片。\n把图片放成“{root}\\角色名\\图片文件”即可。',
         )
 
     # 按图片来源选择发送通道：远程 URL 交给共享发送器下载与压缩，本地路径交由 _send_local_image

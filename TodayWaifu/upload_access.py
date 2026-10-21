@@ -27,9 +27,8 @@ def can_use_whitelisted_feature(
     白名单与显式主人名单的匹配，故返回 False 时调用方仍需自行判断。
     """
     normalized_user_id = str(user_id).strip()
-    return (
-        normalized_user_id in normalized_user_ids(master_ids)
-        or normalized_user_id in normalized_user_ids(whitelist_ids)
+    return normalized_user_id in normalized_user_ids(master_ids) or normalized_user_id in normalized_user_ids(
+        whitelist_ids
     )
 
 

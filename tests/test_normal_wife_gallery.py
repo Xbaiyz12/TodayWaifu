@@ -19,8 +19,7 @@ def _load_parser():
     function = next(
         node
         for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-        and node.name == '_parse_normal_gallery_candidates'
+        if isinstance(node, ast.FunctionDef) and node.name == '_parse_normal_gallery_candidates'
     )
     module = ast.Module(
         body=[
@@ -105,9 +104,9 @@ class NormalWifeGalleryTests(unittest.TestCase):
         # 以保证每日唯一性与数据库记录共用同一套流程；一旦在此注册触发器，
         # 同一用户会出现两条互不感知的抽取路径。
         source = MODULE.read_text(encoding='utf-8')
-        self.assertNotIn("on_fullmatch", source)
-        self.assertNotIn("on_command", source)
-        self.assertNotIn("on_prefix", source)
+        self.assertNotIn('on_fullmatch', source)
+        self.assertNotIn('on_command', source)
+        self.assertNotIn('on_prefix', source)
 
 
 if __name__ == '__main__':

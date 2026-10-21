@@ -30,7 +30,7 @@ class InteractionConfigSourceTests(unittest.TestCase):
         ):
             self.assertIn(key, config_source)
             self.assertIn(key, help_source)
-        self.assertIn("DailyWifeShowConfig = StringConfig(", daily_config_source)
+        self.assertIn('DailyWifeShowConfig = StringConfig(', daily_config_source)
         self.assertIn("'今日老婆外观配置'", daily_config_source)
         self.assertIn('column=column', help_source)
 
@@ -70,8 +70,14 @@ class InteractionSourceTests(unittest.TestCase):
         for word in ('抢老公', '抢今日老公', '抢萝莉', '抢今日萝莉'):
             self.assertIn(word, rob_source)
         for word in (
-            '送老公', '送今日老公', '同意送老公', '拒绝送老公',
-            '送萝莉', '送今日萝莉', '同意送萝莉', '拒绝送萝莉',
+            '送老公',
+            '送今日老公',
+            '同意送老公',
+            '拒绝送老公',
+            '送萝莉',
+            '送今日萝莉',
+            '同意送萝莉',
+            '拒绝送萝莉',
         ):
             self.assertIn(word, gift_source)
         for word in ('接受老婆赠送', '拒绝老婆赠送', '接受老公赠送', '拒绝老公赠送', '接受萝莉赠送', '拒绝萝莉赠送'):
@@ -147,7 +153,6 @@ class InteractionSourceTests(unittest.TestCase):
         self.assertIn('ALL_DAILY_RECORD_KINDS', daily_store_source)
         self.assertIn("context['safe_wives']", daily_store_source)
         self.assertIn("record['divorced'] = True", divorce_source)
-
 
     def test_rob_rejects_when_robber_already_has_active_item(self) -> None:
         # 已有占用对象时抢必须被拒绝，否则同一用户会同时持有两条当日记录，

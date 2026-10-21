@@ -20,10 +20,7 @@ def _extract_function(path: Path, name: str, globals_dict: dict[str, Any]):
     # 源文件带 UTF-8 BOM（由编辑器写入），必须以 utf-8-sig 解码，否则首行 token 解析失败。
     tree = ast.parse(path.read_text(encoding='utf-8-sig'))
     function = next(
-        node
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name == name
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
     )
     # 惰性注解要求目标模块已启用 future import；抽取后的片段脱离原模块，需补回该导入。
     future = ast.ImportFrom(

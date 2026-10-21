@@ -1,4 +1,5 @@
 """TodayWaifu 的结果图片发送。"""
+
 from __future__ import annotations
 
 import time
@@ -64,6 +65,7 @@ def _ai_return_draw(kind: str, name: str, text: str | None) -> None:
             ai_return(f'【今日{title}】')
     except Exception as exc:
         logger.warning(f'{LOG_PREFIX} ai_return 数据提取失败: {exc}')
+
 
 _VALID_IMAGE_REF_TTL_SECONDS = 60.0
 _VALID_IMAGE_REF_CACHE: dict[str, float] = {}
@@ -153,8 +155,7 @@ def _shrink_image_sync(image: bytes | bytearray) -> bytes:
     data = shrink_image_cached(raw, limit, _gallery_image_cache_root())
     if data is not raw:
         logger.debug(
-            f'{LOG_PREFIX} 图片 {len(raw) / 1048576:.1f}MB 超过阈值，'
-            f'已压缩至 {len(data) / 1048576:.2f}MB 后发送'
+            f'{LOG_PREFIX} 图片 {len(raw) / 1048576:.1f}MB 超过阈值，已压缩至 {len(data) / 1048576:.2f}MB 后发送'
         )
     return data
 

@@ -23,35 +23,35 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = json.loads((ROOT / "tests" / "compatibility_manifest.json").read_text(encoding="utf-8"))
+MANIFEST = json.loads((ROOT / 'tests' / 'compatibility_manifest.json').read_text(encoding='utf-8'))
 
 
 def _config_manifest() -> dict[str, list[dict[str, str]]]:
     # 用 ast.unparse 而非 ast.literal_eval：默认值里含 GsStrConfig(...) 等调用表达式，
     # 只有还原源码文本才能把「类型、默认值与 options 列表」一并纳入比对
-    tree = ast.parse((ROOT / "config_default.py").read_text(encoding="utf-8-sig"))
+    tree = ast.parse((ROOT / 'config_default.py').read_text(encoding='utf-8-sig'))
     result: dict[str, list[dict[str, str]]] = {}
     for node in tree.body:
         if not isinstance(node, ast.AnnAssign):
             continue
         if not isinstance(node.target, ast.Name) or not isinstance(node.value, ast.Dict):
             continue
-        if node.target.id not in {"CONFIG_DEFAULT", "APPEARANCE_CONFIG_DEFAULT"}:
+        if node.target.id not in {'CONFIG_DEFAULT', 'APPEARANCE_CONFIG_DEFAULT'}:
             continue
         rows: list[dict[str, str]] = []
         for key, value in zip(node.value.keys, node.value.values):
             # 跳过非字面量键而非报错：与 manifest 生成脚本保持同一口径，避免因无关的
             # 动态键导致两侧结果长度不一致而产生噪声失败
             if isinstance(key, ast.Constant) and isinstance(key.value, str):
-                rows.append({"key": key.value, "expr": ast.unparse(value)})
+                rows.append({'key': key.value, 'expr': ast.unparse(value)})
         result[node.target.id] = rows
     return result
 
 
 def _trigger_manifest() -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
-    for path in sorted((ROOT / "TodayWaifu").glob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8-sig"))
+    for path in sorted((ROOT / 'TodayWaifu').glob('*.py')):
+        tree = ast.parse(path.read_text(encoding='utf-8-sig'))
         # 只取模块顶层函数定义：触发器必须在此处注册才会在插件加载时被 core 收集，
         # 嵌套函数里的装饰器不产生注册效果，纳入比对只会放宽契约
         for node in tree.body:
@@ -62,12 +62,12 @@ def _trigger_manifest() -> list[dict[str, str]]:
                     continue
                 # 按 on_ 前缀识别触发器，可覆盖 on_command / on_prefix 等全部注册形式；
                 # 装饰器名被改写时该触发器会整体从清单消失，索引位错位即可暴露
-                if decorator.func.attr.startswith("on_"):
+                if decorator.func.attr.startswith('on_'):
                     rows.append(
                         {
-                            "file": path.relative_to(ROOT).as_posix(),
-                            "function": node.name,
-                            "decorator": ast.unparse(decorator),
+                            'file': path.relative_to(ROOT).as_posix(),
+                            'function': node.name,
+                            'decorator': ast.unparse(decorator),
                         }
                     )
     return rows
@@ -75,65 +75,64 @@ def _trigger_manifest() -> list[dict[str, str]]:
 
 class CompatibilityContractTests(unittest.TestCase):
     def test_config_keys_types_and_defaults_remain_compatible(self) -> None:
-        self.assertEqual(_config_manifest(), MANIFEST["configs"])
+        self.assertEqual(_config_manifest(), MANIFEST['configs'])
 
     def test_commands_aliases_permissions_and_ai_descriptions_remain_compatible(self) -> None:
-        self.assertEqual(_trigger_manifest(), MANIFEST["triggers"])
+        self.assertEqual(_trigger_manifest(), MANIFEST['triggers'])
 
     def test_required_resources_keep_their_existing_paths(self) -> None:
         # resources 是安装后必须随包提供的静态资产（文本映射、帮助页与图标贴图）；
         # 缺其一即导致对应功能在运行期抛错，而打包时漏文件不会有任何其它信号
-        for relative in MANIFEST["resources"]:
+        for relative in MANIFEST['resources']:
             self.assertTrue((ROOT / relative).exists(), relative)
 
     def test_plugin_loading_order_remains_compatible(self) -> None:
-        source = (ROOT / "TodayWaifu" / "__init__.py").read_text(encoding="utf-8-sig")
+        source = (ROOT / 'TodayWaifu' / '__init__.py').read_text(encoding='utf-8-sig')
         # 只锁定顺序，不锁定 import 语句的其它部分：导入即注册触发器，重排会改变命令
         # 优先级（帮助被指定老婆命令拦截即属此类），而下方的 index 查找会在语句被删除
         # 或改名时直接抛 ValueError
-        modules = ["shared", "help", "normal_wife", "daily", "rob", "gift", "divorce", "loli", "custom_role"]
-        positions = [source.index(f"from . import {name}") for name in modules]
+        modules = ['shared', 'help', 'normal_wife', 'daily', 'rob', 'gift', 'divorce', 'loli', 'custom_role']
+        positions = [source.index(f'from . import {name}') for name in modules]
         self.assertEqual(positions, sorted(positions))
 
     def test_runtime_data_paths_remain_compatible(self) -> None:
         # shared 已按职责拆分，路径常量散落在 paths/constants 等模块，故扫描整个 TodayWaifu 包。
         # 比对的是拼接后的文本而非具体文件：断言只关心「这些路径字面量仍被引用」，
         # 锁定归属文件会让后续拆分再次触发误报
-        twf_source = "\n".join(
-            path.read_text(encoding="utf-8-sig") for path in sorted((ROOT / "TodayWaifu").glob("*.py"))
+        twf_source = '\n'.join(
+            path.read_text(encoding='utf-8-sig') for path in sorted((ROOT / 'TodayWaifu').glob('*.py'))
         )
-        config = (ROOT / "daily_wife_config.py").read_text(encoding="utf-8-sig")
+        config = (ROOT / 'daily_wife_config.py').read_text(encoding='utf-8-sig')
         # 每一项都是磁盘上的既有目录或文件名，改动即等于用户数据「换址」：旧数据不会
         # 被搬走，只会在新位置重建，表现为所有人的记录与已下载图片凭空消失
         for text in (
             "get_res_path('TodayWaifu')",
-            "custom_role_map.json",
-            "custom_role_map.txt",
-            "custom_role_pile",
-            "loli_images",
+            'custom_role_map.json',
+            'custom_role_map.txt',
+            'custom_role_pile',
+            'loli_images',
         ):
             self.assertIn(text, twf_source + config)
         # 群友头像不再落盘（见下方独立用例）：其缓存目录已从数据路径契约中移除，
         # 不能再断言该字面量存在，否则会与「头像必须实时获取」互相矛盾
-        self.assertNotIn("group_member_avatar_cache", twf_source + config)
+        self.assertNotIn('group_member_avatar_cache', twf_source + config)
 
     def test_member_avatars_are_never_persisted(self) -> None:
         # 回归守卫：头像本身是高频变化的实时资源，缓存副本既长期占用磁盘，又会在用户
         # 换头像后继续发出旧图。此处锁定「不落盘」这一决定，防止后续有人重新引入缓存。
         sources = {
-            path.name: path.read_text(encoding="utf-8-sig")
-            for path in sorted((ROOT / "TodayWaifu").glob("*.py"))
+            path.name: path.read_text(encoding='utf-8-sig') for path in sorted((ROOT / 'TodayWaifu').glob('*.py'))
         }
-        combined = "\n".join(sources.values())
+        combined = '\n'.join(sources.values())
 
         # 不得再有头像缓存目录、缓存有效期与在途合并表
-        self.assertNotIn("group_member_avatar_cache", combined)
-        self.assertNotIn("MEMBER_AVATAR_CACHE_SECONDS", combined)
-        self.assertNotIn("_MEMBER_AVATAR_INFLIGHT", combined)
+        self.assertNotIn('group_member_avatar_cache', combined)
+        self.assertNotIn('MEMBER_AVATAR_CACHE_SECONDS', combined)
+        self.assertNotIn('_MEMBER_AVATAR_INFLIGHT', combined)
         # 下载头像必须返回字节供当次发送使用，而不是写入某个路径
-        self.assertIn("def _download_member_avatar(", sources["members.py"])
-        self.assertNotIn("def _download_avatar(", sources["members.py"])
+        self.assertIn('def _download_member_avatar(', sources['members.py'])
+        self.assertNotIn('def _download_avatar(', sources['members.py'])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

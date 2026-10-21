@@ -7,6 +7,7 @@
 
 本模块只依赖标准库，可独立加载（测试用 importlib 直接加载）。
 """
+
 from __future__ import annotations
 
 import time

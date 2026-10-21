@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from .points import _get_balance, _spend_points
 from .shared import (
     LOG_PREFIX,
     LIST_FORWARD_THRESHOLD,
@@ -341,12 +342,9 @@ async def _send_daily_wife(bot: Bot, ev: Event, mode: str = 'wife', specified_na
     is_transient_draw = is_debug_active
 
     specified_role: RoleCandidate | None = None
-    if specified_name and not can_specify_role:
-        logger.warning(f'{LOG_PREFIX} 用户 {ev.user_id} 尝试指定角色 {specified_name}，已拒绝')
-        return await _safe_send(
-            bot,
-            f'只有机器人主人或指定老婆白名单用户才能指定{title}哦。',
-        )
+    # 指定老婆积分消耗：白名单/主人免费，其余用户需消耗 50 积分。扣费必须排在所有
+    # 拒绝分支之后，否则「角色不存在」「今天已有老婆」这些情况也会白扣积分。
+    _SPECIFY_COST = 50
 
     if specified_name and not is_transient_draw:
         candidates, error = await _load_candidates(mode)
@@ -489,6 +487,19 @@ async def _send_daily_wife(bot: Bot, ev: Event, mode: str = 'wife', specified_na
                 bot,
                 f'你今天已经和{item_name}离婚了，明天再来吧~',
             )
+
+    # 所有拒绝分支都已返回，此时才真正扣费；抽取本身失败的概率远低于上述业务校验，
+    # 扣费放在抽取前可避免「抽完再扣费失败」导致老婆白送。
+    if specified_name and not can_specify_role:
+        balance = await _get_balance(ev.user_id, ev.bot_id)
+        if balance < _SPECIFY_COST:
+            return await _safe_send(
+                bot,
+                f'指定{title}需要 {_SPECIFY_COST} 积分（主人或白名单免费），你还有 {balance} 分。',
+            )
+        spent = await _spend_points(ev.user_id, ev.bot_id, _SPECIFY_COST)
+        if not spent:
+            return await _safe_send(bot, '兑换失败，积分可能刚刚被用掉了，稍后再试试。')
 
     record: WifeRecord | None = None
 
@@ -682,6 +693,7 @@ async def _send_group_member_wife(bot: Bot, ev: Event) -> list[str] | None:
         ev.user_id,
         ev.group_id is not None,
     )
+
 
 async def _send_group_member_petpet(bot: Bot, ev: Event) -> list[str] | None:
     """用最近一次娶到的群友头像生成摸头表情包。

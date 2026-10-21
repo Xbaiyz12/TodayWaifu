@@ -7,6 +7,7 @@
 
 反向依赖（status、normal_wife）采用延迟导入：它们在导入期依赖本模块，顶层导入会成环。
 """
+
 from __future__ import annotations
 
 import sys

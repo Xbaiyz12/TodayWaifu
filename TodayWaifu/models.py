@@ -6,6 +6,7 @@
 
 本模块不依赖 TodayWaifu 内其它模块，测试用 importlib 直接加载，故禁止运行时相对导入。
 """
+
 from __future__ import annotations
 
 import json
@@ -52,8 +53,14 @@ def _conflict_update_columns(statement: Insert) -> dict[str, ColumnElement[objec
 
 # upsert 冲突时需要覆盖的业务列：须与 _row_from_value 产出的列一致，漏列会使旧值残留。
 _CONFLICT_UPDATE_COLUMNS = (
-    'name', 'display_name', 'image', 'record_type', 'state',
-    'origin', 'updated_at', 'payload',
+    'name',
+    'display_name',
+    'image',
+    'record_type',
+    'state',
+    'origin',
+    'updated_at',
+    'payload',
 )
 
 
@@ -138,7 +145,7 @@ class DailyWifeRecord(BaseModel, table=True):
         bucket: str,
         user_key: str,
         value: RoleRecordValue | bool | None,
-    ) -> "DailyWifeRecord":
+    ) -> 'DailyWifeRecord':
         if isinstance(value, dict):
             try:
                 updated_at = int(value.get('updated_at') or 0)
@@ -181,10 +188,7 @@ class DailyWifeRecord(BaseModel, table=True):
     ) -> DailyContext:
         """只加载单个 bot/group 上下文，避免每日热路径一次取回全天所有群的行。"""
         result = await session.execute(
-            select(cls)
-            .where(cls.day == day)
-            .where(cls.bot_id == bot_id)
-            .where(cls.group_id == group_id)
+            select(cls).where(cls.day == day).where(cls.bot_id == bot_id).where(cls.group_id == group_id)
         )
         context: DailyContext = {}
         for row in result.scalars().all():
@@ -393,9 +397,7 @@ class DailyWifeRecord(BaseModel, table=True):
             for user_key, value in records.items():
                 user_key = str(user_key)
                 desired_keys.add((bucket, user_key))
-                row = cls._row_from_value(
-                    day, bot_id, group_id, bucket, user_key, value
-                )
+                row = cls._row_from_value(day, bot_id, group_id, bucket, user_key, value)
                 values.append(
                     {
                         'day': day,
@@ -423,9 +425,7 @@ class DailyWifeRecord(BaseModel, table=True):
             .where(cls.group_id == group_id)
         )
         stale_keys = [
-            (bucket, user_key)
-            for bucket, user_key in existing.all()
-            if (bucket, user_key) not in desired_keys
+            (bucket, user_key) for bucket, user_key in existing.all() if (bucket, user_key) not in desired_keys
         ]
         if stale_keys:
             await session.execute(
@@ -566,10 +566,7 @@ class DailyWifeRecord(BaseModel, table=True):
         事务若在外部被中断，必须回滚，否则删除已生效而插入丢失，数据将出现整体缺口。
         """
         await session.execute(
-            delete(cls)
-            .where(cls.day == day)
-            .where(cls.bot_id == bot_id)
-            .where(cls.group_id == group_id)
+            delete(cls).where(cls.day == day).where(cls.bot_id == bot_id).where(cls.group_id == group_id)
         )
         rows: list[DailyWifeRecord] = []
         for bucket, records in context.items():

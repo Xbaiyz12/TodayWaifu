@@ -1,4 +1,5 @@
 """TodayWaifu 的角色对照表加载与候选角色归并。"""
+
 from __future__ import annotations
 
 import time
@@ -88,11 +89,7 @@ def _load_custom_upload_role_map() -> dict[str, str]:
 def _role_images(role_dir: Path) -> tuple[str, ...]:
     # 递归扫描以覆盖角色目录下的多级子目录；排序保证同一角色图片顺序稳定，
     # 使抽签结果在相同种子下可复现
-    images = [
-        path
-        for path in role_dir.rglob('*')
-        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
-    ]
+    images = [path for path in role_dir.rglob('*') if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS]
     return tuple(str(path) for path in sorted(images, key=lambda path: str(path).lower()))
 
 
@@ -258,15 +255,11 @@ def _scan_local_candidates(
     pile_root = _resolve_role_pile_root()
     default_pile_root = _resolve_default_role_pile_root()
     upload_pile_root = _custom_upload_role_pile_root() if role_mode == 'wife' else None
-    if (
-        pile_root is None
-        and default_pile_root is None
-        and (upload_pile_root is None or not upload_pile_root.is_dir())
-    ):
+    if pile_root is None and default_pile_root is None and (upload_pile_root is None or not upload_pile_root.is_dir()):
         return None, '没有找到 custom_role_pile 或默认 role_pile 图片目录。'
 
     if pile_root is None:
-        pile_root = Path("dummy_non_existent_path")
+        pile_root = Path('dummy_non_existent_path')
 
     try:
         role_map = _load_role_map(role_map_path, role_mode)
@@ -295,11 +288,7 @@ def _load_nte_local_candidates(
     except OSError as exc:
         logger.exception(f'{LOG_PREFIX} 读取异环角色对照表失败: {exc}')
         return None, '读取异环角色 ID 对照表失败。'
-    role_map = {
-        role_id: role_name
-        for role_id, role_name in role_map.items()
-        if not _is_excluded_nte_role(role_name)
-    }
+    role_map = {role_id: role_name for role_id, role_name in role_map.items() if not _is_excluded_nte_role(role_name)}
     if not role_map:
         return None, '异环角色 ID 对照表为空。'
 
@@ -311,11 +300,7 @@ def _load_nte_local_candidates(
         custom_root or Path('dummy_non_existent_nte_custom_path'),
         None,
     )
-    custom_by_id = {
-        role_id: candidate
-        for candidate in custom_candidates
-        for role_id in candidate.role_ids
-    }
+    custom_by_id = {role_id: candidate for candidate in custom_candidates for role_id in candidate.role_ids}
 
     candidates: list[RoleCandidate] = []
     for role_id in sorted(role_map, key=lambda item: int(item) if item.isdigit() else item):
@@ -367,10 +352,7 @@ def _load_pgr_local_candidates() -> tuple[RoleCandidate, ...]:
     if cached is not None and now - cached[0] < CACHE_TTL_SECONDS:
         return cached[1]
     rows = scan_named_role_directories(_pgr_wife_root(), IMAGE_EXTENSIONS)
-    candidates = tuple(
-        RoleCandidate(name=name, role_ids=(name,), images=images)
-        for name, images in rows
-    )
+    candidates = tuple(RoleCandidate(name=name, role_ids=(name,), images=images) for name, images in rows)
     CANDIDATE_CACHE[cache_key] = (now, candidates)
     return candidates
 
@@ -385,10 +367,7 @@ _MALE_ROLE_NAMES_NORM = {_normalize_role_name(n) for n in EXCLUDED_ROLE_NAMES}
 
 def _is_male_role(name: str) -> bool:
     # 老公对照表可被用户覆盖，优先采用；缺失时退回内置名单，避免用户未配置时误选男性角色
-    husband_names = {
-        _normalize_role_name(role_name)
-        for role_name in _load_mode_role_map('husband').values()
-    }
+    husband_names = {_normalize_role_name(role_name) for role_name in _load_mode_role_map('husband').values()}
     return _normalize_role_name(name) in (husband_names or _MALE_ROLE_NAMES_NORM)
 
 
@@ -437,6 +416,5 @@ def _filter_by_mode(
     return tuple(
         role
         for role in candidates
-        if any(role_id in allowed_ids for role_id in role.role_ids)
-        or _normalize_role_name(role.name) in allowed_names
+        if any(role_id in allowed_ids for role_id in role.role_ids) or _normalize_role_name(role.name) in allowed_names
     )

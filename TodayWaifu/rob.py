@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import random
 
+from .points import _get_balance, _spend_points
 from .shared import (
     LOG_PREFIX,
     Bot,
@@ -18,6 +19,7 @@ from .shared import (
     logger,
     rob_sv,
     _cfg_bool,
+    _has_card,
     _user_key,
     _is_master,
     _safe_send,
@@ -86,7 +88,7 @@ async def _send_rob_result_image(
     await _send_daily_result_image(bot, role, image, text, user_id, is_group, kind)
 
 
-async def _send_rob_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
+async def _send_rob_daily(bot: Bot, ev: Event, kind: str = 'wife', force: bool = False) -> None:
     title = _daily_item_title(kind)
     # 老公的夺取能力跟随「今日老公」功能开关：该功能未启用时不存在可抢的目标
     if kind == 'husband' and not _husband_available():
@@ -131,6 +133,9 @@ async def _send_rob_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
         elif _is_secondhand_wife(target_data):
             # 抢来的或别人送的不再流转：否则同一条记录可在群内无限次易手
             refusal = f'对方这个{title}是抢来或别人送的，抢不动哦~'
+        elif _has_card(context, target_key, 'locked'):
+            # 锁定老婆：目标消耗 50 积分激活后，今日内无法被抢夺，优先级高于抢劫本身。
+            refusal = f'对方的{title}已经锁定了，今天抢不动哦~'
         elif not _has_active_wife(target_data):
             refusal = f'对方今天还没有{title}呢~'
 
@@ -145,16 +150,22 @@ async def _send_rob_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
             is_master = _is_master(ev)
             attempt_key = _rob_attempt_key(kind, robber_id)
             # 兼容读取 wife 的旧键：升级前写入的裸用户 ID 记录仍需生效，否则当天限制被重置。
-            # 主人不受次数限制，便于验证与处理异常。
-            if not is_master and (attempts.get(attempt_key) or (kind == 'wife' and attempts.get(robber_id))):
+            # 主人不受次数限制，便于验证与处理异常。force=True 为付费重试，同样绕过次数限制。
+            if (
+                not is_master
+                and not force
+                and (attempts.get(attempt_key) or (kind == 'wife' and attempts.get(robber_id)))
+            ):
                 logger.info(f'{LOG_PREFIX} 用户 {robber_id} 今天抢{title}次数已用尽')
-                refusal = f'今天已经抢过{title}啦，明天再来吧！'
+                refusal = f'今天已经抢过{title}啦，发【再抢老婆】消耗 10 积分可再抢一次！'
 
         if refusal is None:
             # 次数在判定成败之前记入：失败同样消耗当日次数，否则可以反复尝试直到成功
             if not is_master:
                 updates.append(('rob_attempts', attempt_key, True))
-            if random.random() >= _rob_success_rate(kind):
+            base_rate = _rob_success_rate(kind)
+            success = random.random() < base_rate
+            if not success:
                 logger.info(f'{LOG_PREFIX} 用户 {robber_id} 抢 {target_user_id} 的{title}失败')
                 rob_failed = True
             else:
@@ -178,7 +189,7 @@ async def _send_rob_daily(bot: Bot, ev: Event, kind: str = 'wife') -> None:
     if refusal is not None:
         return await _safe_send(bot, refusal)
     if rob_failed:
-        return await _safe_send(bot, f'这次没抢到{title}，下次再试试吧~')
+        return await _safe_send(bot, f'这次没抢到{title}，发【再抢老婆】消耗 10 积分可再抢一次~')
 
     # 展示被抢走的原始图片：记录已在锁内完成转移，此处只读取，不再改动状态
     role = target_record.to_role()
@@ -333,3 +344,136 @@ async def rob_shota(bot: Bot, ev: Event) -> None:
 )
 async def rob_shota_at(bot: Bot, ev: Event) -> None:
     await _send_rob_shota(bot, ev)
+
+
+# 再抢老婆：消耗 10 积分绕过当日次数限制再抢一次。
+_ROB_RETRY_COST = 10
+ROB_RETRY_COMMANDS = (
+    '再抢老婆',
+    '再抢一次老婆',
+    '重新抢老婆',
+)
+
+
+async def _rob_precheck(ev: Event, kind: str) -> str | None:
+    """再抢老婆收费前的只读预检，命中即返回拒绝文案。
+
+    正式归属校验仍在锁内重做：这里只负责把「目标不存在 / 自己已有老婆 / 对方锁定」
+    这类必然失败的请求挡在扣费之前，避免用户花了积分才发现抢不了。
+    """
+    title = _daily_item_title(kind)
+    if kind == 'husband' and not _husband_available():
+        return f'今天还没有开启{title}功能哦~'
+    if not _rob_enabled(kind):
+        return f'抢{title}功能没有开启哦~'
+
+    target_user_id = _get_event_target_user_id(ev)
+    if not target_user_id:
+        return (
+            f'要抢谁的{title}？请艾特对方，或在命令后面写对方 QQ。\n'
+            'QQ 官方机器人等没有 QQ 号的平台，可直接粘贴对方的用户 ID。'
+        )
+
+    robber_id = _user_key(ev)
+    if target_user_id == robber_id:
+        return f'自己抢自己的{title}也太奇怪了吧！'
+
+    context = await _load_daily_context(ev)
+    bucket = _daily_bucket_name(kind)
+    target_key = _user_key(ev, target_user_id)
+    target_data = context[bucket].get(target_key)
+    if _wife_state(target_data) != 'owned':
+        return f'对方的{title}已经不在身边了，抢不到了哦~'
+    if _is_secondhand_wife(target_data):
+        return f'对方这个{title}是抢来或别人送的，抢不动哦~'
+    if _has_card(context, target_key, 'locked'):
+        return f'对方的{title}已经锁定了，今天抢不动哦~'
+    if _has_active_wife(context[bucket].get(robber_id)):
+        return f'你今天已经有{title}了，先离婚再抢吧~'
+    return None
+
+
+async def _send_rob_retry(bot: Bot, ev: Event) -> None:
+    """再抢老婆：通过预检后扣 10 积分，再绕过次数限制执行一次抢劫。"""
+    refusal = await _rob_precheck(ev, 'wife')
+    if refusal is not None:
+        return await _safe_send(bot, refusal)
+
+    balance = await _get_balance(ev.user_id, ev.bot_id)
+    if balance < _ROB_RETRY_COST:
+        return await _safe_send(bot, f'积分不够哦，再抢老婆需要 {_ROB_RETRY_COST} 分，你还有 {balance} 分。')
+
+    spent = await _spend_points(ev.user_id, ev.bot_id, _ROB_RETRY_COST)
+    if not spent:
+        return await _safe_send(bot, '兑换失败，积分可能刚刚被用掉了，稍后再试试。')
+
+    await _safe_send(bot, f'已消耗 {_ROB_RETRY_COST} 积分，正在为你再抢一次老婆…')
+    await _send_rob_daily(bot, ev, 'wife', force=True)
+
+
+@rob_sv.on_prefix(
+    ROB_RETRY_COMMANDS,
+    block=True,
+    to_ai=f"""消耗 {_ROB_RETRY_COST} 积分绕过当日次数限制再抢一次老婆。
+    当用户说“再抢老婆”“重新抢老婆”时调用，目标需在命令里艾特或用 ID 指定。
+
+    Args:
+        text: 无需额外参数，目标从消息里的 @ 或用户 ID 解析
+    """,
+    covers=['消耗积分重试抢夺今日老婆'],
+    aliases=['今日老婆·再抢老婆'],
+)
+async def rob_retry_wife(bot: Bot, ev: Event) -> None:
+    await _send_rob_retry(bot, ev)
+
+
+# 锁定老婆：消耗 50 积分激活，今日内老婆无法被他人抢夺。
+_LOCK_WIFE_COST = 50
+LOCK_WIFE_COMMANDS = (
+    '锁定老婆',
+    '锁老婆',
+    '保护老婆',
+)
+
+
+async def _send_lock_wife(bot: Bot, ev: Event) -> None:
+    """锁定老婆：扣 50 积分后设置 locked 状态，今日内无法被抢夺。"""
+    from .shared import _set_card
+
+    user_key = _user_key(ev)
+    context = await _load_daily_context(ev)
+    bucket = _daily_bucket_name('wife')
+    current = context[bucket].get(user_key)
+
+    if not isinstance(current, dict) or _wife_state(current) != 'owned':
+        return await _safe_send(bot, '你今天还没有老婆，先抽一个再锁定吧～')
+
+    if _has_card(context, user_key, 'locked'):
+        return await _safe_send(bot, '你今天已经锁定老婆了，无需重复锁定。')
+
+    balance = await _get_balance(ev.user_id, ev.bot_id)
+    if balance < _LOCK_WIFE_COST:
+        return await _safe_send(bot, f'积分不够哦，锁定老婆需要 {_LOCK_WIFE_COST} 分，你还有 {balance} 分。')
+
+    spent = await _spend_points(ev.user_id, ev.bot_id, _LOCK_WIFE_COST)
+    if not spent:
+        return await _safe_send(bot, '兑换失败，积分可能刚刚被用掉了，稍后再试试。')
+
+    await _set_card(ev, user_key, 'locked', True)
+    await _safe_send(bot, f'✅ 已消耗 {_LOCK_WIFE_COST} 积分锁定老婆，今天没人能抢走你的老婆啦！')
+
+
+@rob_sv.on_fullmatch(
+    LOCK_WIFE_COMMANDS,
+    block=True,
+    to_ai=f"""消耗 {_LOCK_WIFE_COST} 积分锁定今日老婆，使其无法被他人抢夺。
+    当用户说“锁定老婆”“保护老婆”时调用。
+
+    Args:
+        text: 无需参数，留空即可
+    """,
+    covers=['消耗积分锁定今日老婆防止被抢'],
+    aliases=['今日老婆·锁定老婆', '今日老婆·保护老婆'],
+)
+async def lock_wife(bot: Bot, ev: Event) -> None:
+    await _send_lock_wife(bot, ev)

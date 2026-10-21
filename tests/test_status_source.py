@@ -7,6 +7,7 @@
 本文件同时锁定兼容路径 `_daily_record_count` 的存在：状态指标已改走一条带索引的聚合
 查询，但该辅助函数仍服务于已 hydrate 的旧结构数据，删除它会破坏依赖方。
 """
+
 import ast
 import unittest
 from typing import Any
@@ -23,8 +24,7 @@ def _load_status_helpers() -> dict[str, Any]:
     functions = [
         node
         for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-        and node.name in {'_is_countable_daily_record', '_daily_record_count'}
+        if isinstance(node, ast.FunctionDef) and node.name in {'_is_countable_daily_record', '_daily_record_count'}
     ]
     module = ast.Module(body=functions, type_ignores=[])
     ast.fix_missing_locations(module)
@@ -48,7 +48,7 @@ class StatusSourceTests(unittest.TestCase):
         self.assertIn("'今日老婆': get_today_wife_count", source)
         self.assertIn("'今日萝莉': get_today_loli_count", source)
         self.assertIn("'今日老公': get_today_husband_count", source)
-        self.assertIn("days.get(_today_key())", source)
+        self.assertIn('days.get(_today_key())', source)
 
     def test_daily_record_count_counts_today_original_records(self) -> None:
         # 夹具刻意混合多种边界记录，用于固定口径：stolen_by（记录仍归本人）、

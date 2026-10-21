@@ -10,6 +10,7 @@
 本模块不依赖 gsuid_core 与 TodayWaifu 内其它模块，可独立加载（测试用 importlib
 直接加载）。
 """
+
 from __future__ import annotations
 
 import os

@@ -16,6 +16,7 @@
 命令路径的接线同样属于契约：角色图与萝莉图的投递实现（31c225d 将其改名为 `_deliver_*`）
 必须经由有界获取，且不得再直接 `await` 无上限的下载。
 """
+
 import ast
 import asyncio
 import unittest
@@ -124,15 +125,15 @@ class SenderWiringTests(unittest.TestCase):
     def test_role_and_loli_senders_use_the_bounded_acquisition(self) -> None:
         source = SENDERS.read_text(encoding='utf-8')
         role_fn = source[
-            source.index('async def _deliver_role_image('):source.index('async def _deliver_daily_result_image(')
+            source.index('async def _deliver_role_image(') : source.index('async def _deliver_daily_result_image(')
         ]
         loli_fn = source[
-            source.index('async def _deliver_loli_result_image('):source.index('_deliver_shota_result_image = ')
+            source.index('async def _deliver_loli_result_image(') : source.index('_deliver_shota_result_image = ')
         ]
 
         # 超时取消不能顺着 await 传下去掐断下载，必须用 shield 保护
         acquire_fn = source[
-            source.index('async def _acquire_gallery_image('):source.index('async def _deliver_role_image(')
+            source.index('async def _acquire_gallery_image(') : source.index('async def _deliver_role_image(')
         ]
         self.assertIn('asyncio.shield(_download_image(image_url))', acquire_fn)
 

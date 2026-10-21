@@ -7,6 +7,7 @@
 全部声明为 frozen，避免同一条记录在两个模块间被就地改写后彼此看到的字段不一致；
 需要变更时一律构造新实例（参见 gift 模块通过 ``dict(record)`` 复制后再写入）。
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass

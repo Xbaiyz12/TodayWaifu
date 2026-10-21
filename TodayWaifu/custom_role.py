@@ -7,6 +7,7 @@
 所有阻塞操作（目录扫描、图片读写、文件删除）都经 ``run_blocking`` 投递到专用线程池，
 不占用事件循环。
 """
+
 from __future__ import annotations
 
 from .shared import (
@@ -177,7 +178,6 @@ def _custom_role_image_map(role_id: str) -> dict[str, Path]:
     return result
 
 
-
 def _custom_role_ids_for_name(role_name: str) -> tuple[str, ...]:
     # 每次调用都重新读取对照表而非缓存：对照表可被用户手工编辑，
     # 缓存会使其改动直到进程重启才生效。
@@ -344,7 +344,6 @@ def _save_upload_image_ref(role_dir: Path, role_id: str, source: str, index: int
     return path
 
 
-
 async def _send_create_custom_wife_role(bot: Bot, ev: Event) -> list[str] | None:
     # 创建涉及读改写对照表与磁盘建目录，属阻塞操作，必须投递到专用线程池，
     # 否则会冻结事件循环。
@@ -354,14 +353,14 @@ async def _send_create_custom_wife_role(bot: Bot, ev: Event) -> list[str] | None
         role_name,
     )
     if error:
-        return await _safe_send(bot,error)
+        return await _safe_send(bot, error)
 
     # 用 created 区分「新建」与「已存在」：用户需要知道自己输入的名字是否被复用，
     # 否则会误以为每次命令都创建了新角色。
     if created:
-        await _safe_send(bot,f'自定义老婆创建成功\n角色ID：{role_id}')
+        await _safe_send(bot, f'自定义老婆创建成功\n角色ID：{role_id}')
     else:
-        await _safe_send(bot,f'自定义老婆已存在\n角色ID：{role_id}')
+        await _safe_send(bot, f'自定义老婆已存在\n角色ID：{role_id}')
 
 
 async def _send_upload_custom_wife_images(bot: Bot, ev: Event) -> list[str] | None:
@@ -384,7 +383,7 @@ async def _send_upload_custom_wife_images(bot: Bot, ev: Event) -> list[str] | No
         role_name,
     )
     if error:
-        return await _safe_send(bot,error)
+        return await _safe_send(bot, error)
 
     role_dir = _writable_role_pile_root() / role_id
     saved: list[Path] = []
@@ -399,7 +398,7 @@ async def _send_upload_custom_wife_images(bot: Bot, ev: Event) -> list[str] | No
             saved.append(path)
 
     if not saved:
-        return await _safe_send(bot,f'【{role_name}】上传图片失败，请确认消息里附带的是图片。')
+        return await _safe_send(bot, f'【{role_name}】上传图片失败，请确认消息里附带的是图片。')
 
     # 新图片可能改变该角色的候选集合，必须失效缓存才会在后续抽卡中生效。
     _invalidate_candidate_cache()
@@ -415,7 +414,7 @@ async def _send_upload_custom_wife_images(bot: Bot, ev: Event) -> list[str] | No
     # 仅在确有失败时才追加该行：成功路径下不展示 0 张失败，避免提示噪音。
     if failed:
         msg.append(f'失败：{failed} 张')
-    await _safe_send(bot,'\n'.join(msg))
+    await _safe_send(bot, '\n'.join(msg))
 
 
 async def _send_custom_wife_image_list(bot: Bot, ev: Event) -> list[str] | None:
@@ -427,7 +426,7 @@ async def _send_custom_wife_image_list(bot: Bot, ev: Event) -> list[str] | None:
 
     role_id, role_name, images = entries
     if not images:
-        return await _safe_send(bot,f'自定义老婆【{role_name}】暂未上传过图片。')
+        return await _safe_send(bot, f'自定义老婆【{role_name}】暂未上传过图片。')
 
     # 以合并转发消息返回：图片较多时逐条发送会刷屏，且 ID 与图片需要成对呈现。
     nodes: list[Message | str] = []
@@ -494,9 +493,9 @@ async def _send_delete_custom_wife_image(bot: Bot, ev: Event) -> list[str] | Non
         hash_id,
     )
     if error:
-        return await _safe_send(bot,error)
+        return await _safe_send(bot, error)
     if image_path is None:
-        return await _safe_send(bot,f'【{role_name}】未找到图片ID：{hash_id}')
+        return await _safe_send(bot, f'【{role_name}】未找到图片ID：{hash_id}')
 
     try:
         await run_blocking(image_path.unlink)
@@ -504,11 +503,11 @@ async def _send_delete_custom_wife_image(bot: Bot, ev: Event) -> list[str] | Non
         # 文件可能已被其它进程删除或权限不足；此处降级为提示而不抛出，
         # 因为对照表未受影响，角色仍可用。
         logger.warning(f'{LOG_PREFIX} 删除自定义老婆图片失败: {image_path} -> {exc}')
-        return await _safe_send(bot,f'【{role_name}】图片删除失败：{hash_id}')
+        return await _safe_send(bot, f'【{role_name}】图片删除失败：{hash_id}')
 
     # 图片集合已变化，失效候选缓存后下次抽卡才会读到新的图库。
     _invalidate_candidate_cache()
-    await _safe_send(bot,f'已删除【{role_name}】老婆图片：{hash_id}')
+    await _safe_send(bot, f'已删除【{role_name}】老婆图片：{hash_id}')
 
 
 # 以下命令注册共用同一批处理函数，差异仅在于触发词与是否走正则：
@@ -548,4 +547,3 @@ async def custom_wife_delete_role(bot: Bot, ev: Event) -> None:
     # 负向先行断言排除「删除老婆图片/确认/取消」：这三者由更具体的命令处理，
     # 若不排除，它们会被本条正则先行匹配并把「图片」当成角色名。
     await _send_request_delete_custom_wife_role(bot, ev)
-

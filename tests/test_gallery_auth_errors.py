@@ -17,6 +17,7 @@
 现象从「请求过快」变成「图库已挂」。鉴权映射还必须在全部拉取入口（通用入口、指定 URL
 入口、图片下载、萝莉与正太）生效，任一入口遗漏都会让用户重新看到裸的 HTTPError。
 """
+
 import io
 import ast
 import json
@@ -149,7 +150,7 @@ class ThrottleDoesNotTripBreakerTests(unittest.TestCase):
         # 分支结构上，仅靠行为测试需要构造熔断器与时钟，反而更难锁定该分支
         self.source = GALLERY.read_text(encoding='utf-8')
         self.helper = self.source[
-            self.source.index('def _http_get_with_retry('):self.source.index('def _auth_error_reason(')
+            self.source.index('def _http_get_with_retry(') : self.source.index('def _auth_error_reason(')
         ]
 
     def test_429_is_in_the_no_retry_branch(self) -> None:
@@ -162,7 +163,7 @@ class ThrottleDoesNotTripBreakerTests(unittest.TestCase):
         # 分支内必须直接抛出而非继续循环，且在抛出前不得留下 record_failure 调用；
         # 限流是客户端侧条件，计入熔断会让一次突发限流触发全量回退本地
         marker = 'if exc.code in {401, 403, 429}:'
-        branch = self.helper[self.helper.index(marker):]
+        branch = self.helper[self.helper.index(marker) :]
         self.assertIn('raise', branch[:120])
         self.assertNotIn('record_failure', branch[:120])
 

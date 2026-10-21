@@ -4,7 +4,7 @@
     "data": [
       {
         "name": "今日老婆",
-        "desc": "抽取今日老婆",
+        "desc": "抽取今日老婆；指定角色名需消耗50积分（主人或白名单免费）",
         "eg": "今日老婆",
         "need_ck": false,
         "need_sk": false,
@@ -81,15 +81,31 @@
     "data": [
       {
         "name": "抢老婆",
-        "desc": "有概率抢走对方今日老婆",
+        "desc": "有概率抢走对方今日老婆；失败后可消耗10积分再抢一次",
         "eg": "抢老婆 @对方",
         "need_ck": false,
         "need_sk": false,
         "need_admin": false
       },
       {
+        "name": "再抢老婆",
+        "desc": "消耗10积分绕过当日次数限制再抢一次老婆",
+        "eg": "再抢老婆 @对方",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "锁定老婆",
+        "desc": "消耗50积分锁定今日老婆，今日内无法被他人抢夺",
+        "eg": "锁定老婆",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
         "name": "送老婆",
-        "desc": "把今日老婆送给对方",
+        "desc": "把今日老婆送给对方；抢来或别人送的老婆赠送需消耗20积分",
         "eg": "送老婆 @对方",
         "need_ck": false,
         "need_sk": false,
@@ -147,6 +163,14 @@
         "name": "离婚",
         "desc": "主动放弃今天的老婆，不触发补偿",
         "eg": "离婚",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "换老婆",
+        "desc": "消耗10积分删除当前老婆并重新抽取",
+        "eg": "换老婆",
         "need_ck": false,
         "need_sk": false,
         "need_admin": false
@@ -341,6 +365,218 @@
         "need_ck": false,
         "need_sk": false,
         "need_admin": true
+      }
+    ]
+  },
+  "签到积分": {
+    "desc": "签到攒积分，积分可换老婆、抢老婆与兑换商品",
+    "data": [
+      {
+        "name": "签到",
+        "desc": "每日签到获得积分：基础 10 分，连续签到每天多 2 分，最高 40 分",
+        "eg": "签到",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "我的签到",
+        "desc": "查看累计/连续签到天数与当前积分余额",
+        "eg": "我的签到",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "查询积分",
+        "desc": "查看当前积分余额、累计获得与消耗",
+        "eg": "查询积分",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "赠送积分",
+        "desc": "把积分赠送给群友，需要 @对方 并写明数量",
+        "eg": "赠送积分 @对方 50",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "积分商城",
+        "desc": "查看可兑换的商品与价格",
+        "eg": "积分商城",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "兑换",
+        "desc": "用积分兑换商城商品，每人每件每天一次",
+        "eg": "兑换 免签卡",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
+  "打卡运势": {
+    "desc": "每日一次，抽今日幸运面板",
+    "data": [
+      {
+        "name": "打卡",
+        "desc": "抽取今日幸运值并生成面板图，打卡同样获得积分：基础 10 分，连续打卡有加成",
+        "eg": "打卡",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "幸运值排行榜",
+        "desc": "查看今日群内幸运值排行",
+        "eg": "幸运值排行榜",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "非酋榜",
+        "desc": "查看今日运气最差的成员",
+        "eg": "非酋榜",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "提取背景",
+        "desc": "提取打卡面板原图，可回复打卡图或指定面板ID",
+        "eg": "提取背景",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "鹿打卡",
+        "desc": "鹿、扣两套人品日历，每天各记一次",
+        "eg": "鹿打卡",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "鹿扣日历",
+        "desc": "查看本月鹿扣日历与统计",
+        "eg": "鹿日历",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
+  "塔罗与游戏": {
+    "desc": "塔罗占卜与群聊小游戏",
+    "data": [
+      {
+        "name": "塔罗牌",
+        "desc": "抽一张塔罗牌占卜今天",
+        "eg": "塔罗牌",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "占卜",
+        "desc": "抽三张塔罗牌做完整占卜",
+        "eg": "占卜",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "掷骰子",
+        "desc": "掷骰子，支持 2d6 这类写法",
+        "eg": "掷骰子 2d6",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "石头剪刀布",
+        "desc": "和机器人猜拳",
+        "eg": "石头剪刀布 石头",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "猜数字",
+        "desc": "在群里开始一轮猜数字游戏",
+        "eg": "猜数字",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "俄罗斯轮盘",
+        "desc": "抽中即被禁言，需要群管理权限",
+        "eg": "俄罗斯轮盘",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
+  "问候与动图": {
+    "desc": "早安晚安问候与 GIF 动图工具",
+    "data": [
+      {
+        "name": "早安",
+        "desc": "让机器人对你说一句早安",
+        "eg": "早安",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "晚安",
+        "desc": "让机器人对你说一句晚安",
+        "eg": "晚安",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "订阅早安",
+        "desc": "每天到点自动推送问候，可随时取消",
+        "eg": "订阅早安",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "加速",
+        "desc": "把动图与命令发在同一条消息里调整倍速",
+        "eg": "加速 2",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "减速",
+        "desc": "把动图慢放，支持 0.1 ~ 5.0 倍速",
+        "eg": "减速 0.5",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "分解",
+        "desc": "把动图逐帧拼成一张竖长图",
+        "eg": "分解",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   }

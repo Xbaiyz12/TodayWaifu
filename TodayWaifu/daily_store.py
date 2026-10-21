@@ -21,7 +21,7 @@ from .state import _CONTEXT_REGISTRY, _DAILY_CONTEXT_CACHE
 from .domain import WifeRecord
 from .models import DailyWifeRecord
 from .senders import _is_valid_image_ref
-from .payloads import WifeData, DailyContext, RoleRecordValue
+from .payloads import WifeData, CardState, DailyContext, RoleRecordValue
 from .constants import LOG_PREFIX, DAILY_WIFE_KINDS, ALL_DAILY_RECORD_KINDS, _daily_bucket_name
 from .display_name import name_from_event
 from .invalidation import _invalidate_status_cache
@@ -324,6 +324,8 @@ def _get_today_context(data: WifeData, ev: Event) -> DailyContext:
     context.setdefault('marry_members', {})
     context.setdefault('rob_attempts', {})
     context.setdefault('safe_wives', {})
+    # 积分商城道具桶：按用户存储当日生效的道具标记，跨日随上下文一起回收。
+    context.setdefault('cards', {})
     return context
 
 
@@ -500,6 +502,32 @@ def _mark_all_daily_records_divorced(
         marry_record['divorced_at'] = divorced_at
         divorced.append(('marry_member', str(marry_record['name'])))
     return divorced
+
+
+def _get_card_state(context: DailyContext, user_key: str) -> CardState:
+    """读取用户当日的道具状态；不存在时返回空字典（所有道具视为未激活）。"""
+    raw = context.get('cards', {}).get(user_key)
+    return raw if isinstance(raw, dict) else {}
+
+
+def _has_card(context: DailyContext, user_key: str, card: str) -> bool:
+    """判断用户是否持有某个激活中的道具。"""
+    state = _get_card_state(context, user_key)
+    return bool(state.get(card))
+
+
+async def _set_card(ev: Event, user_key: str, card: str, value: bool) -> None:
+    """在持锁状态下写入用户的某个道具标记并落库。
+
+    道具状态存在上下文 `cards` 桶中，与每日记录同一批次写入，保证道具购买与消费
+    的原子性：若拆出独立写入，购买成功但落库失败会让用户既被扣了分又拿不到道具。
+    """
+    async with _daily_context_lock(ev):
+        context = await _load_daily_context(ev)
+        state = _get_card_state(context, user_key)
+        updated = dict(state)
+        updated[card] = value
+        await _save_daily_records(ev, [('cards', user_key, updated)])
 
 
 async def _get_existing_daily_record(ev: Event, user_id: str | int, kind: str = 'wife') -> WifeRecord | None:

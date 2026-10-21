@@ -24,11 +24,7 @@ def _config_entries() -> list[tuple[str, str, str, ast.Call]]:
         if not isinstance(node, ast.Dict):
             continue
         for key, value in zip(node.keys, node.values):
-            if not (
-                isinstance(key, ast.Constant)
-                and isinstance(key.value, str)
-                and isinstance(value, ast.Call)
-            ):
+            if not (isinstance(key, ast.Constant) and isinstance(key.value, str) and isinstance(value, ast.Call)):
                 continue
             title = ''
             description = ''
@@ -71,10 +67,7 @@ def _extract_function(name: str, globals_dict: dict[str, Any]):
     source_path = _module_defining(name)
     tree = ast.parse(source_path.read_text(encoding='utf-8-sig'))
     function = next(
-        node
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-        and node.name == name
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
     )
     module = ast.Module(body=[function], type_ignores=[])
     ast.fix_missing_locations(module)
@@ -98,11 +91,7 @@ class NteConfigAndCommandTests(unittest.TestCase):
     def test_daily_nte_wife_is_disabled_by_default(self) -> None:
         # 开关必须唯一且默认关闭：重复键会让控制台出现两个同名开关，默认开启则等于对
         # 全部用户启用一项依赖外部图库的功能。唯一性同时约束「有且仅有一项」。
-        matches = [
-            entry
-            for entry in _config_entries()
-            if entry[0] == 'DailyWifeNteEnabled'
-        ]
+        matches = [entry for entry in _config_entries() if entry[0] == 'DailyWifeNteEnabled']
         self.assertEqual(len(matches), 1, '应有且仅有一个“今日异环老婆”布尔开关')
         self.assertFalse(_bool_default(matches[0][3]))
 
@@ -154,8 +143,7 @@ class NteConfigAndCommandTests(unittest.TestCase):
         # 残留的配置键会让控制台出现无效开关，残留的选取函数则是未接线的死代码。
         config = (ROOT / 'config_default.py').read_text(encoding='utf-8-sig')
         runtime = '\n'.join(
-            (ROOT / 'TodayWaifu' / name).read_text(encoding='utf-8-sig')
-            for name in ('shared.py', 'daily.py')
+            (ROOT / 'TodayWaifu' / name).read_text(encoding='utf-8-sig') for name in ('shared.py', 'daily.py')
         )
         removed_symbols = (
             'DailyWifeNteMixedEnabled',
@@ -188,8 +176,7 @@ class NteCandidateBehaviorTests(unittest.TestCase):
                 '_role_images': lambda role_dir: tuple(
                     str(path)
                     for path in sorted(role_dir.rglob('*'))
-                    if path.is_file()
-                    and path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp')
+                    if path.is_file() and path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp')
                 ),
                 'logger': _Logger(),
                 'LOG_PREFIX': '[test]',
@@ -233,6 +220,7 @@ class NteCandidateBehaviorTests(unittest.TestCase):
 
         self.assertEqual(len(candidates), 1)
         self.assertEqual(candidates[0].images, (str(default_image),))
+
 
 if __name__ == '__main__':
     unittest.main()

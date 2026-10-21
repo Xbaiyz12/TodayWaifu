@@ -19,13 +19,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "TodayWaifu" / "file_cache.py"
+MODULE_PATH = ROOT / 'TodayWaifu' / 'file_cache.py'
 
 
 def _load_module():
-    spec = importlib.util.spec_from_file_location("todaywaifu_file_cache", MODULE_PATH)
+    spec = importlib.util.spec_from_file_location('todaywaifu_file_cache', MODULE_PATH)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load file_cache module")
+        raise RuntimeError('cannot load file_cache module')
     module = importlib.util.module_from_spec(spec)
     # 每个测试各自加载一份模块，从而获得彼此隔离的内存缓存；共享 sys.modules 中的单例
     # 会让上一个测试写入的条目影响本测试的淘汰与命中判断。
@@ -38,22 +38,22 @@ class FileBytesCacheTests(unittest.TestCase):
         """命中缓存时只允许廉价的 stat 校验，不得再次读取文件内容。"""
         cache = _load_module()
         with TemporaryDirectory() as directory:
-            path = Path(directory) / "a.png"
-            path.write_bytes(b"first")
-            self.assertEqual(cache.read_file_bytes_cached(path), b"first")
+            path = Path(directory) / 'a.png'
+            path.write_bytes(b'first')
+            self.assertEqual(cache.read_file_bytes_cached(path), b'first')
             # stat 校验 mtime 是廉价系统调用，允许保留；只有 read_bytes 才是需要消除的
             # 磁盘读取，因此这里只拦截 read_bytes，命中时它必须不被调用。
             original_read = Path.read_bytes
 
             def fail_read(self, *args, **kwargs):
                 if self == path:
-                    raise AssertionError("命中缓存时不应再次 read_bytes")
+                    raise AssertionError('命中缓存时不应再次 read_bytes')
                 return original_read(self, *args, **kwargs)
 
             try:
                 # 只在补丁生效的窗口内做第二次读取，避免失败分支中的其它读盘被误判为回归。
                 Path.read_bytes = fail_read
-                self.assertEqual(cache.read_file_bytes_cached(path), b"first")
+                self.assertEqual(cache.read_file_bytes_cached(path), b'first')
             finally:
                 # 即使断言失败也必须还原：Path.read_bytes 是全局补丁，泄漏会让后续测试
                 # 以难以定位的方式失败。
@@ -62,14 +62,14 @@ class FileBytesCacheTests(unittest.TestCase):
     def test_mtime_change_invalidates_cache(self) -> None:
         cache = _load_module()
         with TemporaryDirectory() as directory:
-            path = Path(directory) / "b.png"
-            path.write_bytes(b"old")
-            self.assertEqual(cache.read_file_bytes_cached(path), b"old")
+            path = Path(directory) / 'b.png'
+            path.write_bytes(b'old')
+            self.assertEqual(cache.read_file_bytes_cached(path), b'old')
             # 间隔必须大于文件系统 mtime 的分辨率，否则两次写入落在同一时间戳上，
             # 测试会因环境差异而偶发通过（即真失效却未触发失效）。
             time.sleep(0.02)
-            path.write_bytes(b"new-content-longer")
-            self.assertEqual(cache.read_file_bytes_cached(path), b"new-content-longer")
+            path.write_bytes(b'new-content-longer')
+            self.assertEqual(cache.read_file_bytes_cached(path), b'new-content-longer')
 
     def test_lru_eviction_respects_max_entries(self) -> None:
         cache = _load_module()
@@ -77,13 +77,11 @@ class FileBytesCacheTests(unittest.TestCase):
             # 写入量刻意超出上限 8 条：断言只要求不越界，从而给未来调整淘汰策略留出空间，
             # 同时防止缓存无上限增长耗尽核心进程内存。
             for index in range(cache.LOCAL_BYTES_CACHE_MAX_ENTRIES + 8):
-                p = Path(directory) / f"{index}.png"
-                p.write_bytes(b"x")
+                p = Path(directory) / f'{index}.png'
+                p.write_bytes(b'x')
                 cache.read_file_bytes_cached(p)
             # 断言的是内部字典规模：单看内存占用无法区分「未淘汰」与「淘汰后又写入」
-            self.assertLessEqual(
-                len(cache._LOCAL_BYTES_CACHE), cache.LOCAL_BYTES_CACHE_MAX_ENTRIES
-            )
+            self.assertLessEqual(len(cache._LOCAL_BYTES_CACHE), cache.LOCAL_BYTES_CACHE_MAX_ENTRIES)
 
 
 class UrlCacheTests(unittest.TestCase):
@@ -91,19 +89,19 @@ class UrlCacheTests(unittest.TestCase):
         cache = _load_module()
         with TemporaryDirectory() as directory:
             root = Path(directory)
-            url = "https://example.com/a.png"
+            url = 'https://example.com/a.png'
             # 未写入前必须返回 None：调用方以此区分「缓存未命中」与「读到空数据」。
             self.assertIsNone(cache.read_url_cache(root, url))
-            self.assertTrue(cache.write_url_cache(root, url, b"image-bytes"))
-            self.assertEqual(cache.read_url_cache(root, url), b"image-bytes")
+            self.assertTrue(cache.write_url_cache(root, url, b'image-bytes'))
+            self.assertEqual(cache.read_url_cache(root, url), b'image-bytes')
 
     def test_content_addressed_same_url_same_path(self) -> None:
         cache = _load_module()
         # 缓存键由 URL 派生且必须稳定：同 URL 命中同一文件，不同 URL 落不同文件；
         # 键一旦不稳定，磁盘会为同一张图片积累多份副本。
-        p1 = cache.url_hash_cache_path(Path("/tmp/x"), "https://a/1.png")
-        p2 = cache.url_hash_cache_path(Path("/tmp/x"), "https://a/1.png")
-        p3 = cache.url_hash_cache_path(Path("/tmp/x"), "https://a/2.png")
+        p1 = cache.url_hash_cache_path(Path('/tmp/x'), 'https://a/1.png')
+        p2 = cache.url_hash_cache_path(Path('/tmp/x'), 'https://a/1.png')
+        p3 = cache.url_hash_cache_path(Path('/tmp/x'), 'https://a/2.png')
         self.assertEqual(p1, p2)
         self.assertNotEqual(p1, p3)
 
@@ -134,8 +132,8 @@ class UrlCacheTests(unittest.TestCase):
         with TemporaryDirectory() as directory:
             # 空数据写缓存必须视为失败且不落盘：零字节文件会被读端当作命中而返回空图，
             # 因此这里要求返回 False，由调用方继续走网络路径。
-            self.assertFalse(cache.write_url_cache(Path(directory), "https://a", b""))
+            self.assertFalse(cache.write_url_cache(Path(directory), 'https://a', b''))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

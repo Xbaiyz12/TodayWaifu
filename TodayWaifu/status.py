@@ -4,6 +4,7 @@
 使重算频率与写入频率解耦：否则高峰期每次写入都会让控制台的下一轮轮询
 触发一次全表聚合，读放大随写入量线性增长。
 """
+
 from __future__ import annotations
 
 import time
@@ -92,10 +93,7 @@ async def _today_record_counts() -> dict[str, int]:
         # 高峰期若每次写入都重算，控制台的每一轮轮询都会打一次数据库聚合，
         # 读放大随写入量线性增长，故以短暂的数据滞后换取稳定的读开销。
         # 没有任何写入时不因时间流逝重算——数值不会自行变化，重算纯属空转。
-        fresh_enough = (
-            not _STATUS_STALE
-            or time.monotonic() - _STATUS_COMPUTED_AT < STATUS_MIN_RECOMPUTE_SECONDS
-        )
+        fresh_enough = not _STATUS_STALE or time.monotonic() - _STATUS_COMPUTED_AT < STATUS_MIN_RECOMPUTE_SECONDS
         if fresh_enough:
             return cached[1]
 

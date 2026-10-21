@@ -52,8 +52,7 @@ class ConfigMigrationTests(unittest.TestCase):
         forced_urls = None
         for node in tree.body:
             if isinstance(node, ast.Assign) and any(
-                isinstance(target, ast.Name) and target.id == '_FORCED_REMOTE_URLS'
-                for target in node.targets
+                isinstance(target, ast.Name) and target.id == '_FORCED_REMOTE_URLS' for target in node.targets
             ):
                 forced_urls = ast.literal_eval(node.value)
                 break

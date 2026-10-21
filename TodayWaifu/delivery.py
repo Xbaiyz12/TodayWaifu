@@ -6,6 +6,7 @@
 
 本模块只做转发与降级，不产生业务文案。
 """
+
 from __future__ import annotations
 
 from gsuid_core.bot import Bot
@@ -21,11 +22,7 @@ def _is_xwuid_group_activity_hook_error(exc: Exception) -> bool:
     # 收窄到 AttributeError 可避免把同名信息出现在其它异常上时误判为兼容问题，
     # 那样会把本应暴露的真实错误悄悄降级掉。
     message = str(exc)
-    return (
-        isinstance(exc, AttributeError)
-        and 'PluginHookManager' in message
-        and 'group_activity_hooks' in message
-    )
+    return isinstance(exc, AttributeError) and 'PluginHookManager' in message and 'group_activity_hooks' in message
 
 
 def _parse_send_options(

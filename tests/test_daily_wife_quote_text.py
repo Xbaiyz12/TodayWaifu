@@ -66,9 +66,7 @@ def _load_role_quotes_module() -> dict[str, Any]:
 def _extract_function(path: Path, name: str, globals_dict: dict[str, Any]) -> Any:
     tree = ast.parse(path.read_text(encoding='utf-8-sig'))
     function = next(
-        node
-        for node in tree.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
+        node for node in tree.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name
     )
     # 抽取出的片段脱离原模块，需补回 future import，注解才保持惰性求值。
     future = ast.ImportFrom(module='__future__', names=[ast.alias(name='annotations')], level=0)
@@ -167,9 +165,7 @@ class DailyWifeQuoteTextTests(unittest.TestCase):
         globals_dict = dict(self.quote_on)
         globals_dict['WifeRecord'] = _FakeRecord
         globals_dict['_build_text'] = self.build_text
-        globals_dict['_cfg_bool'] = lambda key, default=False: (
-            False if key == 'DailyWifeSendText' else bool(default)
-        )
+        globals_dict['_cfg_bool'] = lambda key, default=False: (False if key == 'DailyWifeSendText' else bool(default))
         fn = _extract_function(PGR_PATH, '_pgr_result_text', globals_dict)
         self.assertIsNone(fn(_FakeRecord('露西亚', ('1001',))))
 

@@ -4,6 +4,7 @@
 外部输入。把它们显式写成 TypedDict，类型检查器与读者都能追踪字段，无需 `Any`；
 同时 TypedDict 在运行时不做校验、也不复制数据，因此对性能与旧数据兼容性均无影响。
 """
+
 from __future__ import annotations
 
 from typing import Union, TypedDict
@@ -152,3 +153,13 @@ class PendingCustomRoleDelete(TypedDict, total=False):
     created_at: float
     role_id: str
     role_name: str
+
+
+class CardState(TypedDict, total=False):
+    """积分功能的当日生效状态。
+
+    目前仅 `locked`（锁定老婆）仍在使用：用户消耗 50 积分后激活，今日内老婆无法被
+    他人抢夺。跨日随每日上下文回收自动失效。
+    """
+
+    locked: bool

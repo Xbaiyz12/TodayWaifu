@@ -27,18 +27,10 @@ class PgrFeatureSourceTests(unittest.TestCase):
         self.assertIn("'DailyWifePgrTextTemplate'", config)
         self.assertIn("'DailyWifeImageUploadWhitelist'", config)
         self.assertTrue(
-            any(
-                isinstance(node, ast.AsyncFunctionDef)
-                and node.name == 'daily_pgr_wife'
-                for node in tree.body
-            )
+            any(isinstance(node, ast.AsyncFunctionDef) and node.name == 'daily_pgr_wife' for node in tree.body)
         )
         self.assertTrue(
-            any(
-                isinstance(node, ast.AsyncFunctionDef)
-                and node.name == 'daily_pgr_wife_prefix'
-                for node in tree.body
-            )
+            any(isinstance(node, ast.AsyncFunctionDef) and node.name == 'daily_pgr_wife_prefix' for node in tree.body)
         )
         self.assertIn("('今日战双老婆', 'jrzslp')", source)
         self.assertIn("('上传战双老婆图片', '战双老婆上传图片')", source)
@@ -90,18 +82,16 @@ class PgrFeatureSourceTests(unittest.TestCase):
         # 校验——它是离婚后重抽能生效、且不会复用旧记录的关键。
         #
         # shared 已按职责拆分，故扫描整个 TodayWaifu 包而非单文件。
-        shared = '\n'.join(
-            path.read_text(encoding='utf-8-sig') for path in sorted((ROOT / 'TodayWaifu').glob('*.py'))
-        )
+        shared = '\n'.join(path.read_text(encoding='utf-8-sig') for path in sorted((ROOT / 'TodayWaifu').glob('*.py')))
         metadata = (ROOT / 'TodayWaifu' / 'kind_metadata.py').read_text(encoding='utf-8-sig')
         source = (ROOT / 'TodayWaifu' / 'pgr.py').read_text(encoding='utf-8-sig')
 
-        self.assertIn("for kind in ALL_DAILY_RECORD_KINDS", shared)
-        self.assertIn("context.setdefault(_daily_bucket_name(kind), {})", shared)
-        self.assertIn('bucket="pgr_wives"', metadata)
+        self.assertIn('for kind in ALL_DAILY_RECORD_KINDS', shared)
+        self.assertIn('context.setdefault(_daily_bucket_name(kind), {})', shared)
+        self.assertIn("bucket='pgr_wives'", metadata)
         self.assertIn("_cfg('DailyWifePgrGalleryPath')", shared)
         self.assertIn("_daily_rng(ev, key, 'pgr_wife')", source)
-        self.assertIn("Path(record.image).is_file()", source)
+        self.assertIn('Path(record.image).is_file()', source)
         self.assertIn("_wife_state(existing_raw) != 'owned'", source)
         self.assertIn('写入前发现已离手的战双老婆记录，拒绝覆盖', source)
         self.assertIn("_get_other_daily_wife_name(ev, 'pgr')", source)
@@ -110,9 +100,7 @@ class PgrFeatureSourceTests(unittest.TestCase):
     def test_daily_wife_variants_share_an_exclusive_daily_choice(self) -> None:
         # 三个游戏共用同一条互斥规则：用户当天已在任一模式获得老婆，另一模式必须提示
         # 「不要贪心」而非再发一位。该提示属用户可见文案，不得改写。
-        shared = '\n'.join(
-            path.read_text(encoding='utf-8-sig') for path in sorted((ROOT / 'TodayWaifu').glob('*.py'))
-        )
+        shared = '\n'.join(path.read_text(encoding='utf-8-sig') for path in sorted((ROOT / 'TodayWaifu').glob('*.py')))
         daily = (ROOT / 'TodayWaifu' / 'daily.py').read_text(encoding='utf-8-sig')
 
         self.assertIn("DAILY_WIFE_KINDS = ('wife', 'nte', 'pgr')", shared)
@@ -126,27 +114,31 @@ class PgrFeatureSourceTests(unittest.TestCase):
         daily_source = (ROOT / 'TodayWaifu' / 'daily.py').read_text(encoding='utf-8-sig')
         pgr_source = (ROOT / 'TodayWaifu' / 'pgr.py').read_text(encoding='utf-8-sig')
 
-        daily_function = ast.get_source_segment(
-            daily_source,
-            next(
-                node
-                for node in ast.parse(daily_source).body
-                if isinstance(node, ast.AsyncFunctionDef)
-                and node.name == '_send_daily_wife'
-            ),
-        ) or ''
-        pgr_function = ast.get_source_segment(
-            pgr_source,
-            next(
-                node
-                for node in ast.parse(pgr_source).body
-                if isinstance(node, ast.AsyncFunctionDef)
-                and node.name == '_send_daily_pgr_wife'
-            ),
-        ) or ''
+        daily_function = (
+            ast.get_source_segment(
+                daily_source,
+                next(
+                    node
+                    for node in ast.parse(daily_source).body
+                    if isinstance(node, ast.AsyncFunctionDef) and node.name == '_send_daily_wife'
+                ),
+            )
+            or ''
+        )
+        pgr_function = (
+            ast.get_source_segment(
+                pgr_source,
+                next(
+                    node
+                    for node in ast.parse(pgr_source).body
+                    if isinstance(node, ast.AsyncFunctionDef) and node.name == '_send_daily_pgr_wife'
+                ),
+            )
+            or ''
+        )
 
         for source in (daily_function, pgr_function):
-            self.assertIn("is_master = _is_master(ev)", source)
+            self.assertIn('is_master = _is_master(ev)', source)
             self.assertIn("_cfg_bool('DailyWifeDebugMode', False) and is_master", source)
             self.assertLess(source.index('is_debug_active ='), source.index('_get_other_daily_wife_name('))
             self.assertIn('if not is_transient_draw:', source)
@@ -177,15 +169,17 @@ class PgrFeatureSourceTests(unittest.TestCase):
         # 调试抽取必须走随机挑选且不写库，同时保留指定名字的精确匹配入口：
         # 若误用 _ensure_daily_pgr_wife_record，主人每次调试都会占掉当天的唯一名额。
         source = (ROOT / 'TodayWaifu' / 'pgr.py').read_text(encoding='utf-8-sig')
-        function = ast.get_source_segment(
-            source,
-            next(
-                node
-                for node in ast.parse(source).body
-                if isinstance(node, ast.AsyncFunctionDef)
-                and node.name == '_send_daily_pgr_wife'
-            ),
-        ) or ''
+        function = (
+            ast.get_source_segment(
+                source,
+                next(
+                    node
+                    for node in ast.parse(source).body
+                    if isinstance(node, ast.AsyncFunctionDef) and node.name == '_send_daily_pgr_wife'
+                ),
+            )
+            or ''
+        )
 
         self.assertIn('if is_transient_draw:', function)
         self.assertIn('_load_pgr_wife_candidates()', function)
@@ -202,15 +196,17 @@ class PgrFeatureSourceTests(unittest.TestCase):
         # 带参前缀命令把原文交给指定匹配：参数解析若在此处截断或改写，
         # 含空格与特殊字符的角色名将永远匹配不到。
         source = (ROOT / 'TodayWaifu' / 'pgr.py').read_text(encoding='utf-8-sig')
-        function = ast.get_source_segment(
-            source,
-            next(
-                node
-                for node in ast.parse(source).body
-                if isinstance(node, ast.AsyncFunctionDef)
-                and node.name == 'daily_pgr_wife_prefix'
-            ),
-        ) or ''
+        function = (
+            ast.get_source_segment(
+                source,
+                next(
+                    node
+                    for node in ast.parse(source).body
+                    if isinstance(node, ast.AsyncFunctionDef) and node.name == 'daily_pgr_wife_prefix'
+                ),
+            )
+            or ''
+        )
 
         self.assertIn("str(ev.text or '').strip()", function)
 
@@ -219,15 +215,17 @@ class PgrFeatureSourceTests(unittest.TestCase):
         # 不同图库来源对间隔号等写法不一致，逐字比较会把同一角色判成未命中；
         # 而包含匹配会让「心」命中「鉴心」（b915108 修正的正是台词库同类问题）。
         source = (ROOT / 'TodayWaifu' / 'pgr.py').read_text(encoding='utf-8-sig')
-        function = ast.get_source_segment(
-            source,
-            next(
-                node
-                for node in ast.parse(source).body
-                if isinstance(node, ast.FunctionDef)
-                and node.name == '_pgr_candidates_by_name'
-            ),
-        ) or ''
+        function = (
+            ast.get_source_segment(
+                source,
+                next(
+                    node
+                    for node in ast.parse(source).body
+                    if isinstance(node, ast.FunctionDef) and node.name == '_pgr_candidates_by_name'
+                ),
+            )
+            or ''
+        )
 
         self.assertIn('_normalize_role_name(specified_name).casefold()', function)
         self.assertIn('_normalize_role_name(candidate.name).casefold() == target', function)

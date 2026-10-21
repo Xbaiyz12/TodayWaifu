@@ -141,9 +141,7 @@ class PlatformMentionTests(unittest.TestCase):
         # 适配只在私聊生效，群聊必须原样返回同一对象：群聊 @ 段属用户可见内容，
         # 一旦群聊也剥离，群友间的互动回复会丢失目标指向。
         # 私聊剥离后还需连带删除紧随其后的换行，否则消息首行留空。
-        functions = _load_functions(
-            {'_is_at_message', '_remove_private_mentions', '_adapt_mentions_for_platform'}
-        )
+        functions = _load_functions({'_is_at_message', '_remove_private_mentions', '_adapt_mentions_for_platform'})
         adapt = functions['_adapt_mentions_for_platform']
         outgoing = [FakeMessage('at', '123456789'), '\n', '结果文字', FakeMessage('image', 'x')]
 
@@ -163,7 +161,7 @@ class PlatformMentionTests(unittest.TestCase):
         for function_name in ('_deliver_role_image', '_deliver_loli_result_image', '_send_local_image'):
             start = source.index(f'async def {function_name}(')
             next_function = source.find('\nasync def ', start + 1)
-            block = source[start:next_function if next_function >= 0 else None]
+            block = source[start : next_function if next_function >= 0 else None]
             # 图片段必须经 _image_message 构造：它在插件线程池里做 base64，
             # 避免框架的 MessageSegment.image(bytes) 在事件循环上同步编码大图
             self.assertIn('await _image_message(', block)

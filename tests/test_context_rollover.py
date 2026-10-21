@@ -8,6 +8,7 @@
 同一分片的两个协程会各持一把锁同时进入临界区；已被回收快照的滞后 hydrate 不得回写。
 后两条属并发正确性约束，仅靠外部行为观察难以复现，故以显式断言固定。
 """
+
 import ast
 import asyncio
 import unittest
@@ -127,12 +128,12 @@ class RolloverWiringTests(unittest.TestCase):
     # 或换成重量级回收，行为测试不会失败，但零点内存与互斥约束会静默退化。
     def test_loading_a_context_triggers_the_rollover_check(self) -> None:
         source = STORE.read_text(encoding='utf-8')
-        body = source[source.index('async def _load_daily_context('):source.index('async def _save_daily_records(')]
+        body = source[source.index('async def _load_daily_context(') : source.index('async def _save_daily_records(')]
         self.assertIn('_roll_over_context_day(key.day)', body, '每次 hydrate 都要检查日期翻转')
 
     def test_rollover_is_a_single_cheap_comparison_on_the_hot_path(self) -> None:
         source = STORE.read_text(encoding='utf-8')
-        fn = source[source.index('def _roll_over_context_day('):source.index('async def _load_daily_context(')]
+        fn = source[source.index('def _roll_over_context_day(') : source.index('async def _load_daily_context(')]
         # 每次读取上下文都会经过该函数，同一天必须短路返回，不能每次都遍历缓存键
         self.assertIn('if _LAST_CONTEXT_DAY == day:', fn)
         self.assertIn('return 0', fn)
@@ -143,7 +144,7 @@ class RolloverWiringTests(unittest.TestCase):
         prune 假定调用时已无协程使用旧日期键，与翻转瞬间的真实状态相反。
         """
         source = STORE.read_text(encoding='utf-8')
-        fn = source[source.index('def _roll_over_context_day('):source.index('async def _load_daily_context(')]
+        fn = source[source.index('def _roll_over_context_day(') : source.index('async def _load_daily_context(')]
         self.assertIn('_CONTEXT_REGISTRY.drop_stale_days(day)', fn)
         self.assertNotIn('_CONTEXT_REGISTRY.prune(', fn)
 
@@ -151,7 +152,7 @@ class RolloverWiringTests(unittest.TestCase):
         # 兼容缓存的键形如 `{day}:{bot}:{group}`，只能按日期前缀清理；按对象身份遍历会漏掉
         # 已被其他地方持有引用的旧键。
         source = STORE.read_text(encoding='utf-8')
-        fn = source[source.index('def _roll_over_context_day('):source.index('async def _load_daily_context(')]
+        fn = source[source.index('def _roll_over_context_day(') : source.index('async def _load_daily_context(')]
         self.assertIn("key.startswith(f'{day}:')", fn)
 
 

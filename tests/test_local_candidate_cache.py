@@ -7,6 +7,7 @@
 本文件同时锁定缓存的失效方向：上传或删除图片必须主动清空缓存，否则新图要等到 TTL 到期
 才可见；扫描失败（多为目录暂时不可用）不得写入缓存，否则目录恢复后仍持续返回失败结果。
 """
+
 import ast
 import unittest
 from pathlib import Path
@@ -22,7 +23,7 @@ class LocalCandidateCacheTests(unittest.TestCase):
 
     def _body(self, start_marker: str, end_marker: str) -> str:
         """取出函数体并剥掉 docstring（说明文字里会提到 rglob 等旧细节）。"""
-        block = self.source[self.source.index(start_marker):self.source.index(end_marker)]
+        block = self.source[self.source.index(start_marker) : self.source.index(end_marker)]
         function = ast.parse(block).body[0]
         return '\n'.join(
             ast.unparse(node)
@@ -70,7 +71,7 @@ class LocalCandidateCacheTests(unittest.TestCase):
         # 返回结构不能变（用原始源码判断，ast.unparse 会给元组补括号）：
         # (None, 原因) 表示扫描失败，((), None) 表示确实无角色，调用方据此区分提示文案
         raw = self.source[
-            self.source.index('def _scan_local_candidates('):self.source.index('def _load_nte_local_candidates(')
+            self.source.index('def _scan_local_candidates(') : self.source.index('def _load_nte_local_candidates(')
         ]
         self.assertIn('return candidates, None', raw)
 

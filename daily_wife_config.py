@@ -40,6 +40,7 @@ _LEGACY_KEYS_TO_REMOVE = [
 if CONFIG_PATH.is_file():
     try:
         import json
+
         _raw_data = json.loads(CONFIG_PATH.read_text(encoding='utf-8'))
         _raw_changed = False
         for _k in _LEGACY_KEYS_TO_REMOVE:

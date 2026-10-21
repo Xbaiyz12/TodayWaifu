@@ -4,6 +4,7 @@
 发起远程请求。两条路径产出的记录都写入每日上下文的 lolis 分桶，因此抢、送、离婚等交互
 读到的始终是同一张图片；记录随日期翻转失效，构成「同一用户当天只有一张萝莉」的约束。
 """
+
 from __future__ import annotations
 
 from .shared import (
@@ -95,11 +96,7 @@ def _loli_image_paths() -> tuple[Path, ...]:
         # 漂移，同一用户当天重复调用就可能得到不同图片，破坏「当天固定」的承诺。
         paths = tuple(
             sorted(
-                (
-                    path
-                    for path in root.rglob('*')
-                    if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
-                ),
+                (path for path in root.rglob('*') if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS),
                 key=lambda p: str(p).lower(),
             )
         )
@@ -121,6 +118,7 @@ def _delete_loli_images() -> int:
 
 
 # ── 上传辅助 ─────────────────────────────────────────────────────────────────
+
 
 def _loli_image_hash_id(path: Path | str) -> str:
     # 转发而非直接引用：本模块对外暴露固定的函数名，标识算法集中在 image_input 中演进
@@ -182,6 +180,7 @@ def _loli_image_map() -> dict[str, Path]:
 
 
 # ── 命令处理 ─────────────────────────────────────────────────────────────────
+
 
 def _loli_record_name(image: str) -> str:
     # 名称内嵌内容标识：同一张图在不同用户、不同日期下命名一致，便于去重与问题排查
@@ -368,10 +367,7 @@ async def _send_loli_image(bot: Bot, ev: Event) -> None:
         if record is not None and not _is_legacy_remote_loli_record(record):
             return await _send_loli_record(bot, ev, record)
         if record is not None:
-            logger.warning(
-                f'{LOG_PREFIX} 用户 {user_key} 的旧版萝莉记录只保存了随机接口地址，'
-                '将迁移为当天固定图片 URL'
-            )
+            logger.warning(f'{LOG_PREFIX} 用户 {user_key} 的旧版萝莉记录只保存了随机接口地址，将迁移为当天固定图片 URL')
 
     record, error = await _roll_loli_record(ev, user_key)
     if record is None:
@@ -383,21 +379,14 @@ async def _send_loli_image(bot: Bot, ev: Event) -> None:
     selected_record = record
     async with _daily_context_lock(ev):
         save_context = await _load_daily_context(ev)
-        existing = (
-            save_context['lolis'][user_key]
-            if user_key in save_context['lolis']
-            else None
-        )
+        existing = save_context['lolis'][user_key] if user_key in save_context['lolis'] else None
         if isinstance(existing, dict):
             unavailable_text = _loli_unavailable_text(existing)
             if unavailable_text is not None:
                 response_text = unavailable_text
             else:
                 existing_record = _record_from_dict(existing)
-                if (
-                    existing_record is not None
-                    and not _is_legacy_remote_loli_record(existing_record)
-                ):
+                if existing_record is not None and not _is_legacy_remote_loli_record(existing_record):
                     selected_record = existing_record
                 else:
                     if existing_record is not None:

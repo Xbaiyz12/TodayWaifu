@@ -16,6 +16,7 @@
 2. 上传是阻塞 IO，必须经 ``run_blocking`` 投递到插件自有线程池，不得在事件循环上执行。
 3. COS 客户端按配置惰性构建并缓存；配置变更后由 ``_client_signature`` 检测并重建。
 """
+
 from __future__ import annotations
 
 import re

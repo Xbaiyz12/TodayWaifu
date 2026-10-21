@@ -8,6 +8,7 @@
     D:/122/bot/xiaoyu/botkj/gsuid_core/.venv/Scripts/python.exe tests/test_models_db.py
 无依赖环境下自动跳过。
 """
+
 import asyncio
 import tempfile
 import unittest
@@ -24,7 +25,7 @@ except ImportError:
     _DEPS_OK = False
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = ROOT / "TodayWaifu" / "models.py"
+MODULE_PATH = ROOT / 'TodayWaifu' / 'models.py'
 
 
 def _load_models():
@@ -33,15 +34,15 @@ def _load_models():
     # models.py 被设计为不依赖 TodayWaifu 内其它模块（禁运行时相对导入），因此可按文件路径
     # 独立加载；以模块名登记进 sys.modules 是 dataclass 装饰期查询 cls.__module__ 的前提，
     # 不登记时该查询返回 None 并直接抛 AttributeError。
-    spec = importlib.util.spec_from_file_location("todaywaifu_models", MODULE_PATH)
+    spec = importlib.util.spec_from_file_location('todaywaifu_models', MODULE_PATH)
     if spec is None or spec.loader is None:
-        raise RuntimeError("cannot load models module")
+        raise RuntimeError('cannot load models module')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-@unittest.skipUnless(_DEPS_OK, "缺少 gsuid_core/sqlmodel 环境，跳过数据库测试")
+@unittest.skipUnless(_DEPS_OK, '缺少 gsuid_core/sqlmodel 环境，跳过数据库测试')
 class DailyWifeRecordDbTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -49,8 +50,8 @@ class DailyWifeRecordDbTests(unittest.TestCase):
         # 每个测试类使用独立临时库：用例验证的是事务与 upsert 语义，共用库会让前序用例
         # 残留的行参与后续断言。
         cls._tmp = tempfile.TemporaryDirectory()
-        db_file = Path(cls._tmp.name) / "test.db"
-        engine = create_async_engine(f"sqlite+aiosqlite:///{db_file}")
+        db_file = Path(cls._tmp.name) / 'test.db'
+        engine = create_async_engine(f'sqlite+aiosqlite:///{db_file}')
         cls._engine = engine
 
         async def _init() -> None:
@@ -77,19 +78,15 @@ class DailyWifeRecordDbTests(unittest.TestCase):
 
         async def run() -> None:
             context = {
-                "wives": {
-                    "u1": {"name": "今汐", "image": "a.png", "updated_at": 1},
+                'wives': {
+                    'u1': {'name': '今汐', 'image': 'a.png', 'updated_at': 1},
                 },
-                "rob_attempts": {"u1": True},
+                'rob_attempts': {'u1': True},
             }
-            await models.DailyWifeRecord.save_context(
-                "2026-08-12", "onebot", "1001", context
-            )
-            loaded = await models.DailyWifeRecord.load_day("2026-08-12")
-            self.assertEqual(
-                loaded["onebot:1001"]["wives"]["u1"]["name"], "今汐"
-            )
-            self.assertIs(loaded["onebot:1001"]["rob_attempts"]["u1"], True)
+            await models.DailyWifeRecord.save_context('2026-08-12', 'onebot', '1001', context)
+            loaded = await models.DailyWifeRecord.load_day('2026-08-12')
+            self.assertEqual(loaded['onebot:1001']['wives']['u1']['name'], '今汐')
+            self.assertIs(loaded['onebot:1001']['rob_attempts']['u1'], True)
 
         asyncio.run(run())
 
@@ -99,17 +96,13 @@ class DailyWifeRecordDbTests(unittest.TestCase):
         models = self.models
 
         async def run() -> None:
-            context = {"wives": {"u5": {"name": "A", "updated_at": 1}}}
-            await models.DailyWifeRecord.save_context(
-                "2026-08-13", "onebot", "2001", context
-            )
-            context2 = {"wives": {"u5": {"name": "B", "updated_at": 2}}}
-            await models.DailyWifeRecord.save_context(
-                "2026-08-13", "onebot", "2001", context2
-            )
-            loaded = await models.DailyWifeRecord.load_day("2026-08-13")
-            self.assertEqual(loaded["onebot:2001"]["wives"]["u5"]["name"], "B")
-            self.assertEqual(len(loaded["onebot:2001"]["wives"]), 1)
+            context = {'wives': {'u5': {'name': 'A', 'updated_at': 1}}}
+            await models.DailyWifeRecord.save_context('2026-08-13', 'onebot', '2001', context)
+            context2 = {'wives': {'u5': {'name': 'B', 'updated_at': 2}}}
+            await models.DailyWifeRecord.save_context('2026-08-13', 'onebot', '2001', context2)
+            loaded = await models.DailyWifeRecord.load_day('2026-08-13')
+            self.assertEqual(loaded['onebot:2001']['wives']['u5']['name'], 'B')
+            self.assertEqual(len(loaded['onebot:2001']['wives']), 1)
 
         asyncio.run(run())
 
@@ -120,16 +113,14 @@ class DailyWifeRecordDbTests(unittest.TestCase):
         models = self.models
 
         async def run() -> None:
-            seed_key = ("2026-08-14", "onebot", "3001", "wives", "u1")
-            seed_value = {"name": "保留", "image": "keep.png", "updated_at": 1}
-            await models.DailyWifeRecord.upsert_rows(
-                [(*seed_key, seed_value)]
-            )
+            seed_key = ('2026-08-14', 'onebot', '3001', 'wives', 'u1')
+            seed_value = {'name': '保留', 'image': 'keep.png', 'updated_at': 1}
+            await models.DailyWifeRecord.upsert_rows([(*seed_key, seed_value)])
 
-            original_upsert = models.DailyWifeRecord.__dict__["_upsert_rows"]
+            original_upsert = models.DailyWifeRecord.__dict__['_upsert_rows']
 
             async def fail_upsert(cls, session, rows):
-                raise RuntimeError("injected upsert failure")
+                raise RuntimeError('injected upsert failure')
 
             models.DailyWifeRecord._upsert_rows = classmethod(fail_upsert)
             try:
@@ -137,12 +128,12 @@ class DailyWifeRecordDbTests(unittest.TestCase):
                     await models.DailyWifeRecord.apply_rows(
                         [
                             (
-                                "2026-08-14",
-                                "onebot",
-                                "3001",
-                                "wives",
-                                "u2",
-                                {"name": "新记录", "updated_at": 2},
+                                '2026-08-14',
+                                'onebot',
+                                '3001',
+                                'wives',
+                                'u2',
+                                {'name': '新记录', 'updated_at': 2},
                             )
                         ],
                         [seed_key],
@@ -155,14 +146,10 @@ class DailyWifeRecordDbTests(unittest.TestCase):
                 await models.DailyWifeRecord.get_record(*seed_key),
                 seed_value,
             )
-            self.assertIsNone(
-                await models.DailyWifeRecord.get_record(
-                    "2026-08-14", "onebot", "3001", "wives", "u2"
-                )
-            )
+            self.assertIsNone(await models.DailyWifeRecord.get_record('2026-08-14', 'onebot', '3001', 'wives', 'u2'))
 
         asyncio.run(run())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

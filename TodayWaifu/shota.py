@@ -3,6 +3,7 @@
 与萝莉不同，正太没有本地图片来源，因此图库不可用时没有回退路径，只能把失败原因上报给
 用户。记录写入每日上下文的 shotas 分桶并随日期翻转失效，保证同一用户当天只有一张正太。
 """
+
 from __future__ import annotations
 
 from .shared import (
@@ -80,9 +81,7 @@ def _parse_shota_image_urls(payload: GalleryPayload) -> tuple[str, ...]:
         if not isinstance(role_data, dict):
             continue
         role_ids = tuple(
-            str(role_id).strip()
-            for role_id in role_data.get('role_ids', [])
-            if isinstance(role_id, (str, int))
+            str(role_id).strip() for role_id in role_data.get('role_ids', []) if isinstance(role_id, (str, int))
         )
         images = role_data.get('images')
         if not isinstance(images, list):

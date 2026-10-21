@@ -4,6 +4,7 @@
 的重点不是渲染本身，而是把「渲染结果何时仍然有效」判定清楚：任何参与渲染的资源发生
 变化都必须触发重绘，否则用户会长期看到旧帮助图。
 """
+
 from __future__ import annotations
 
 import json
@@ -253,7 +254,7 @@ async def _render_help(
 
 
 @help_sv.on_fullmatch(
-    ('今日老婆帮助', '老婆帮助'),
+    ('今日老婆帮助', '老婆帮助', '娱乐屋帮助', '娱乐帮助'),
     block=True,
     to_ai="""查看 TodayWaifu 今日老婆插件帮助。
     当用户问“今日老婆怎么用”“今日老婆帮助”“老婆插件有什么命令”时调用。

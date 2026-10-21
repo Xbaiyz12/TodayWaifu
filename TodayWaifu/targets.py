@@ -5,6 +5,7 @@
 本模块按「结构化的 @ 字段 → 消息段 → 原始文本」的优先级依次尝试，命中即返回，
 全部失败则返回 None 交由上层给出提示，不做任何猜测性回退。
 """
+
 from __future__ import annotations
 
 import re

@@ -132,9 +132,7 @@ class WriteAndMigrationTests(unittest.TestCase):
         # 无旧文件时必须返回 False 且不产生空 JSON：写入一个空表会让后续读取认为
         # 「用户自定义表存在但为空」，从而跳过真正的迁移时机。
         with tempfile.TemporaryDirectory() as tmp:
-            self.assertFalse(
-                store.migrate_legacy_text_map(Path(tmp) / 'missing.txt', Path(tmp) / 'out.json')
-            )
+            self.assertFalse(store.migrate_legacy_text_map(Path(tmp) / 'missing.txt', Path(tmp) / 'out.json'))
             self.assertFalse((Path(tmp) / 'out.json').exists())
 
 

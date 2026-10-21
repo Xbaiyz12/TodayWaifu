@@ -62,15 +62,15 @@ class MarryMemberSelfExclusionTests(unittest.IsolatedAsyncioTestCase):
         # 名单中同时放入两个应被排除的 ID 与一个合法候选：过滤一旦失效，命中哪个取决于
         # 洗牌结果，故以具体 user_id 固定断言，使「娶到自己」的回归必然可见。
         ev = SimpleNamespace(
-            user_id="123456",
-            bot_self_id="999999",
-            group_id="888888",
-            bot_id="onebot",
+            user_id='123456',
+            bot_self_id='999999',
+            group_id='888888',
+            bot_id='onebot',
         )
         candidates = (
-            MemberCandidate(name="Self", user_id="123456", avatar="avatar_self"),
-            MemberCandidate(name="Bot", user_id="999999", avatar="avatar_bot"),
-            MemberCandidate(name="Friend", user_id="654321", avatar="avatar_friend"),
+            MemberCandidate(name='Self', user_id='123456', avatar='avatar_self'),
+            MemberCandidate(name='Bot', user_id='999999', avatar='avatar_bot'),
+            MemberCandidate(name='Friend', user_id='654321', avatar='avatar_friend'),
         )
 
         self.ns['_load_group_member_candidates'] = AsyncMock(return_value=candidates)
@@ -78,21 +78,21 @@ class MarryMemberSelfExclusionTests(unittest.IsolatedAsyncioTestCase):
 
         picked = await self.pick_fn(ev, random.Random(42))
         self.assertIsNotNone(picked)
-        self.assertEqual(picked.user_id, "654321")
-        self.assertEqual(picked.name, "Friend")
+        self.assertEqual(picked.user_id, '654321')
+        self.assertEqual(picked.name, 'Friend')
 
     async def test_pick_group_member_returns_none_when_only_caller_and_bot_present(self) -> None:
         # 无第三方候选时必须返回 None，而不是放宽过滤退而选择自身：调用方依赖 None
         # 回落到角色图库，若此处改为返回发起者，用户会看到自己成为自己的老婆。
         ev = SimpleNamespace(
-            user_id="123456",
-            bot_self_id="999999",
-            group_id="888888",
-            bot_id="onebot",
+            user_id='123456',
+            bot_self_id='999999',
+            group_id='888888',
+            bot_id='onebot',
         )
         candidates = (
-            MemberCandidate(name="Self", user_id="123456", avatar="avatar_self"),
-            MemberCandidate(name="Bot", user_id="999999", avatar="avatar_bot"),
+            MemberCandidate(name='Self', user_id='123456', avatar='avatar_self'),
+            MemberCandidate(name='Bot', user_id='999999', avatar='avatar_bot'),
         )
 
         self.ns['_load_group_member_candidates'] = AsyncMock(return_value=candidates)
@@ -105,22 +105,22 @@ class MarryMemberSelfExclusionTests(unittest.IsolatedAsyncioTestCase):
         # 代抽路径传入的 exclude_user_id 必须覆盖 ev.user_id：该参数指向被代替的用户，
         # 若被忽略，代抽会把被代替者重新抽给自己，等同代抽指令失效。
         ev = SimpleNamespace(
-            user_id="caller",
-            bot_self_id="999999",
-            group_id="888888",
-            bot_id="onebot",
+            user_id='caller',
+            bot_self_id='999999',
+            group_id='888888',
+            bot_id='onebot',
         )
         candidates = (
-            MemberCandidate(name="Target", user_id="777777", avatar="avatar_target"),
-            MemberCandidate(name="Friend", user_id="654321", avatar="avatar_friend"),
+            MemberCandidate(name='Target', user_id='777777', avatar='avatar_target'),
+            MemberCandidate(name='Friend', user_id='654321', avatar='avatar_friend'),
         )
 
         self.ns['_load_group_member_candidates'] = AsyncMock(return_value=candidates)
         self.ns['_resolve_member_candidate_avatar'] = lambda m: asyncio.sleep(0, m)
 
-        picked = await self.pick_fn(ev, random.Random(42), exclude_user_id="777777")
+        picked = await self.pick_fn(ev, random.Random(42), exclude_user_id='777777')
         self.assertIsNotNone(picked)
-        self.assertEqual(picked.user_id, "654321")
+        self.assertEqual(picked.user_id, '654321')
 
 
 class DailyLoliConfigTests(unittest.TestCase):
@@ -131,5 +131,5 @@ class DailyLoliConfigTests(unittest.TestCase):
         self.assertTrue(ns['_loli_enabled']())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

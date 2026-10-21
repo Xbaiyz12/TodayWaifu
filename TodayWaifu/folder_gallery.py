@@ -16,11 +16,7 @@ def find_named_role_directory(root: Path, role_name: str) -> Path | None:
         return None
     for path in root.iterdir():
         # 隐藏目录一律排除：它们通常是编辑器或系统的元数据目录，不应被当作角色图库。
-        if (
-            path.is_dir()
-            and not path.name.startswith('.')
-            and path.name.strip().casefold() == target
-        ):
+        if path.is_dir() and not path.name.startswith('.') and path.name.strip().casefold() == target:
             return path
     return None
 
@@ -42,11 +38,7 @@ def scan_named_role_directories(
     roles: list[tuple[str, tuple[str, ...]]] = []
 
     role_dirs = sorted(
-        (
-            path
-            for path in root.iterdir()
-            if path.is_dir() and not path.name.startswith('.')
-        ),
+        (path for path in root.iterdir() if path.is_dir() and not path.name.startswith('.')),
         key=lambda path: path.name.casefold(),
     )
     for role_dir in role_dirs:
@@ -60,11 +52,7 @@ def scan_named_role_directories(
         seen: set[str] = set()
         images: list[str] = []
         for path in sorted(role_dir.rglob('*'), key=lambda item: str(item).casefold()):
-            if (
-                not path.is_file()
-                or path.name.startswith('.')
-                or path.suffix.casefold() not in extensions
-            ):
+            if not path.is_file() or path.name.startswith('.') or path.suffix.casefold() not in extensions:
                 continue
             resolved = str(path.resolve())
             key = resolved.casefold()

@@ -8,6 +8,7 @@
 守护的契约：命令路径不含下载、编码、发送与读盘；依赖请求上下文的数据在入队时刻取样；
 队列满时降级为只发文字而非阻塞调用方；worker 随 Core 启停，并在插件重载后由入队口自愈。
 """
+
 import ast
 import time
 import asyncio
@@ -22,7 +23,7 @@ SENDERS = PLUGIN / 'senders.py'
 
 def _function_source(source: str, name: str, end_marker: str) -> str:
     start = source.index(f'async def {name}(')
-    return source[start:source.index(end_marker, start)]
+    return source[start : source.index(end_marker, start)]
 
 
 class CommandSlotTests(unittest.TestCase):
@@ -52,9 +53,7 @@ class CommandSlotTests(unittest.TestCase):
 
         入队与发送分离后，原先把摘要拼接在发送处的写法会静默丢失摘要，用户只收到图片。
         """
-        role_body = _function_source(
-            self.source, '_send_role_image', 'async def _send_daily_result_image('
-        )
+        role_body = _function_source(self.source, '_send_role_image', 'async def _send_daily_result_image(')
         loli_body = _function_source(self.source, '_send_loli_result_image', 'async def _send_local_image(')
         self.assertIn('_ai_return_draw(kind, role.name, text)', role_body)
         self.assertIn("_ai_return_draw(kind, '', text)", loli_body)
@@ -73,7 +72,7 @@ class CommandSlotTests(unittest.TestCase):
     def test_queue_is_bounded_and_never_blocks_the_caller(self) -> None:
         self.assertIn('asyncio.Queue(maxsize=IMAGE_DELIVERY_QUEUE_MAX)', self.source)
         enqueue = self.source[
-            self.source.index('async def _enqueue_image_job('):self.source.index('async def _send_role_image(')
+            self.source.index('async def _enqueue_image_job(') : self.source.index('async def _send_role_image(')
         ]
         # 必须 put_nowait（满了就降级），不能 await put：后者在队列满时重新引入等待，
         # 把已消除的阻塞从下载路径搬回入队路径，命令额度依旧会被耗尽
@@ -198,7 +197,7 @@ class WorkerLifecycleTests(unittest.TestCase):
         上自愈，图片与文字会静默积压在队列中无人消费（dd71d75 修复的正是该情形）。
         """
         enqueue = self.source[
-            self.source.index('async def _enqueue_image_job('):self.source.index('async def _send_role_image(')
+            self.source.index('async def _enqueue_image_job(') : self.source.index('async def _send_role_image(')
         ]
         self.assertIn('_prune_image_delivery_workers()', enqueue)
 
@@ -207,7 +206,7 @@ class WorkerLifecycleTests(unittest.TestCase):
         # 仅靠入队自愈将无人触发，积压会持续到下一次命令到来
         shared = (PLUGIN / 'shared.py').read_text(encoding='utf-8')
         loop = shared[
-            shared.index('async def _cache_maintenance_once('):shared.index('async def _cache_maintenance_loop(')
+            shared.index('async def _cache_maintenance_once(') : shared.index('async def _cache_maintenance_loop(')
         ]
         self.assertIn('_prune_image_delivery_workers()', loop)
 
@@ -216,8 +215,9 @@ class WorkerLifecycleTests(unittest.TestCase):
         # 察觉。CancelledError 必须单独放行，否则 Core 关闭时的正常取消会被当作投递失败
         # 记录；task_done 则须在任何退出路径上调用，否则队列的未完成计数永久失衡。
         worker = self.source[
-            self.source.index('async def _image_delivery_worker('):
-            self.source.index('def start_image_delivery_workers(')
+            self.source.index('async def _image_delivery_worker(') : self.source.index(
+                'def start_image_delivery_workers('
+            )
         ]
         self.assertIn('except asyncio.CancelledError', worker)
         self.assertIn('except (OSError, RuntimeError, TimeoutError, ValueError, TypeError)', worker)

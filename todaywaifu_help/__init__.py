@@ -20,14 +20,14 @@ from .get_help import (
 )
 
 __all__ = [
-    "ICON",
-    "ICON_PATH",
-    "TEXT_PATH",
-    "ITEM_PATH",
-    "HELP_STYLES",
-    "HELP_STYLE_NAMES",
-    "DEFAULT_STYLE",
-    "HelpButtons",
-    "get_help",
-    "resolve_style_path",
+    'ICON',
+    'ICON_PATH',
+    'TEXT_PATH',
+    'ITEM_PATH',
+    'HELP_STYLES',
+    'HELP_STYLE_NAMES',
+    'DEFAULT_STYLE',
+    'HelpButtons',
+    'get_help',
+    'resolve_style_path',
 ]

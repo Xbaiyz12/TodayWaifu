@@ -10,6 +10,7 @@
 `shrink_image_cached` 以 `data is not raw` 判定是否值得落盘（提交 10c8156），
 若实现改为返回等值副本，缓存写入判断即会失效。
 """
+
 import io
 import unittest
 import importlib.util

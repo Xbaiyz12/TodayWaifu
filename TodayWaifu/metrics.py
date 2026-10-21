@@ -15,6 +15,7 @@
 单点数值无法设定通用上限，比值与趋势才具备可比性。采集过程不触碰网络与数据库，
 因此在故障状态下仍可安全调用。
 """
+
 from __future__ import annotations
 
 from gsuid_core.logger import logger

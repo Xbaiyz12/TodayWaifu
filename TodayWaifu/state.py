@@ -5,6 +5,7 @@
 替换或清空这些对象，而不必逐个模块打补丁。
 
 本模块只做定义，不承载业务逻辑；状态的具体失效策略由 invalidation 模块负责。"""
+
 from __future__ import annotations
 
 import asyncio

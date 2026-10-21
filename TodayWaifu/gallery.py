@@ -1,4 +1,5 @@
 """TodayWaifu 的远程图库访问与图片下载。"""
+
 from __future__ import annotations
 
 import json
@@ -98,6 +99,7 @@ async def _load_pgr_wife_candidates() -> tuple[RoleCandidate, ...]:
     api_url = _pgr_gallery_api_url()
     if api_url:
         try:
+
             async def load_remote() -> tuple[RoleCandidate, ...]:
                 payload = await run_blocking(_fetch_gallery_payload_from_url_sync, api_url)
                 candidates = _parse_pgr_gallery_candidates(payload)
@@ -180,7 +182,7 @@ def _retry_delay(attempt: int) -> float:
     退避上限用于约束单次等待，避免失败次数增多后等待时间无界增长；抖动的意义在于打散
     重试时刻——否则同一批失败请求会在同一瞬间一起重试，形成同步脉冲，反而加剧上游压力。
     """
-    base = RETRY_BASE_DELAY_SECONDS * (2 ** attempt)
+    base = RETRY_BASE_DELAY_SECONDS * (2**attempt)
     return min(base, RETRY_MAX_DELAY_SECONDS) + random.uniform(0, RETRY_JITTER_SECONDS)
 
 
@@ -206,9 +208,7 @@ def _http_get_with_retry(
     """
     key = _circuit_key(url)
     if not _HTTP_BREAKER.allow(key):
-        raise RuntimeError(
-            f'图库接口连续失败，已熔断 {_HTTP_BREAKER.retry_after(key):.0f} 秒后重试。'
-        )
+        raise RuntimeError(f'图库接口连续失败，已熔断 {_HTTP_BREAKER.retry_after(key):.0f} 秒后重试。')
 
     last_exc: Exception = RuntimeError(f'请求 {url} 失败。')
     for attempt in range(retries + 1):
@@ -364,9 +364,7 @@ def _auth_error_reason(exc: HTTPError, *, what: str) -> str:
 
 def _download_image_sync(url: str) -> bytes:
     try:
-        return _http_get_with_retry(
-            url, timeout=IMAGE_HTTP_TIMEOUT_SECONDS, max_bytes=MAX_IMAGE_RESPONSE_BYTES
-        )
+        return _http_get_with_retry(url, timeout=IMAGE_HTTP_TIMEOUT_SECONDS, max_bytes=MAX_IMAGE_RESPONSE_BYTES)
     except HTTPError as exc:
         if exc.code in {401, 403, 429}:
             raise RuntimeError(_auth_error_reason(exc, what='下载图片')) from exc
@@ -398,6 +396,7 @@ async def _download_image(url: str) -> bytes:
 
     task = _IMAGE_INFLIGHT.get(url)
     if task is None:
+
         async def download() -> bytes:
             async with _IMAGE_DOWNLOAD_SEMAPHORE:
                 # 进入信号量后复查磁盘缓存：等待名额期间同一张图可能已由其它任务写盘，
@@ -408,6 +407,7 @@ async def _download_image(url: str) -> bytes:
                 data = await run_blocking(_download_image_sync, url)
                 await run_blocking(write_url_cache, cache_root, url, data)
                 return data
+
         task = asyncio.create_task(download())
         _IMAGE_INFLIGHT[url] = task
     try:
@@ -522,6 +522,7 @@ async def _load_wuwa_candidates(mode: str = 'wife') -> tuple[tuple[RoleCandidate
     task = _CANDIDATE_INFLIGHT.get(cache_key)
     if task is None:
         generation = state._CANDIDATE_CACHE_GENERATION
+
         async def load() -> tuple[tuple[RoleCandidate, ...] | None, str | None]:
             async with _CANDIDATE_LOAD_SEMAPHORE:
                 result = await _load_wuwa_candidates_uncached(role_mode)
@@ -531,6 +532,7 @@ async def _load_wuwa_candidates(mode: str = 'wife') -> tuple[tuple[RoleCandidate
                 if generation != state._CANDIDATE_CACHE_GENERATION:
                     CANDIDATE_CACHE.pop(cache_key, None)
                 return result
+
         task = asyncio.create_task(load())
         _CANDIDATE_INFLIGHT[cache_key] = task
     try:
@@ -551,6 +553,7 @@ async def _load_nte_candidates() -> tuple[tuple[RoleCandidate, ...] | None, str 
     task = _CANDIDATE_INFLIGHT.get(cache_key)
     if task is None:
         generation = state._CANDIDATE_CACHE_GENERATION
+
         async def load() -> tuple[tuple[RoleCandidate, ...] | None, str | None]:
             async with _CANDIDATE_LOAD_SEMAPHORE:
                 # 是否允许远程兜底由取图来源决定：gallery 模式下本地缺图可回退官方 CDN，
@@ -563,6 +566,7 @@ async def _load_nte_candidates() -> tuple[tuple[RoleCandidate, ...] | None, str 
                 if generation != state._CANDIDATE_CACHE_GENERATION:
                     CANDIDATE_CACHE.pop(cache_key, None)
                 return candidates, None
+
         task = asyncio.create_task(load())
         _CANDIDATE_INFLIGHT[cache_key] = task
     try:
@@ -576,9 +580,11 @@ async def _load_candidates(mode: str = 'wife') -> tuple[tuple[RoleCandidate, ...
     role_mode = _role_mode(mode)
     if role_mode == 'normal':
         from .normal_wife import _load_normal_wife_candidates
+
         return await _load_normal_wife_candidates()
     if role_mode == 'wife' and _cfg_bool('DailyWifeNormalEnabled', False):
         from .normal_wife import _load_normal_wife_candidates
+
         return await _load_normal_wife_candidates()
     if role_mode == 'nte':
         return await _load_nte_candidates()

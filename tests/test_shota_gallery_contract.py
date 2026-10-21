@@ -17,11 +17,7 @@ def _extract_function(name: str, globals_dict: dict[str, Any]) -> Any:
     # 只抽取目标函数并注入替身全局名，使被测逻辑不依赖 gsuid_core 与真实配置系统；
     # 注入的全局名是函数体的隐式输入，缺失会直接抛 NameError。
     tree = ast.parse(SHOTA_PATH.read_text(encoding='utf-8-sig'))
-    function = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == name
-    )
+    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
     future = ast.ImportFrom(
         module='__future__',
         names=[ast.alias(name='annotations')],
@@ -114,7 +110,7 @@ class ShotaGalleryContractTests(unittest.TestCase):
         self.assertIn("role_ids=('shota',)", shota_source)
         self.assertIn("record_type='shota'", shota_source)
         self.assertIn("_daily_rng(ev, user_key, 'shota').choice", shota_source)
-        self.assertIn("@shota_sv.on_fullmatch", shota_source)
+        self.assertIn('@shota_sv.on_fullmatch', shota_source)
         self.assertIn('今日正太', shota_source)
         self.assertIn('你今天的正太来啦！', shota_source)
 

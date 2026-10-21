@@ -7,6 +7,7 @@
 本文件守护两层契约：内存 URL 索引在写入、命中读、过期删除与容量溢出四条路径上都必须
 与磁盘状态一致；挑选函数在无缓存时必须退回全量，保持与既有实现同种子逐次一致。
 """
+
 import sys
 import random
 import unittest
@@ -121,9 +122,7 @@ class PickPreferenceTests(unittest.TestCase):
         """
         import ast
 
-        block = self.source[
-            self.source.index('def _pick_role_record('):self.source.index('def _load_role_map(')
-        ]
+        block = self.source[self.source.index('def _pick_role_record(') : self.source.index('def _load_role_map(')]
         function = ast.parse(block).body[0]
         return '\n'.join(
             ast.unparse(node)

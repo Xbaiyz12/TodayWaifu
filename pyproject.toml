@@ -1,7 +1,7 @@
 [project]
 name = "todaywaifu"
 version = "1.0.0"
-description = "基于 GsCore 框架的多游戏「今日老婆」娱乐插件"
+description = "基于 GsCore 框架的多游戏「今日老婆」娱乐插件（含签到积分 / 打卡运势 / 鹿扣日历 / 塔罗 / GIF / 群聊游戏 / 问候推送）"
 requires-python = ">=3.11,<4.0"
 authors = [{ name = "MimoKit" }]
 license = { text = "GPL-3.0-or-later" }
@@ -14,7 +14,7 @@ dependencies = [
 
 [tool.gsuid]
 name = "TodayWaifu"
-desc = "多游戏「今日老婆」，含抽老婆 / 抢 / 送 / 离婚、萝莉 / 正太 / 异环 / 战双、自定义角色图库"
+desc = "多游戏「今日老婆」，含抽老婆 / 抢 / 送 / 离婚、萝莉 / 正太 / 异环 / 战双、自定义角色图库、签到积分 / 打卡运势 / 鹿扣日历 / 塔罗 / GIF / 群聊游戏 / 问候推送"
 version = "1.0.0"
 author = "MimoKit"
 icon = "ICON.png"

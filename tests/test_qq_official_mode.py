@@ -313,7 +313,6 @@ class QqOfficialModeTests(unittest.IsolatedAsyncioTestCase):
 class PetpetNoticeTests(unittest.TestCase):
     """摸头提示及昵称转义的契约。"""
 
-
     def test_petpet_notice_contains_compliance_warning(self) -> None:
         # 合规提醒是平台要求，不是装饰；删除它会让使用者无从知晓审核风险
         namespace = _load_namespace()
@@ -457,7 +456,8 @@ class MemberAvatarCacheTests(unittest.TestCase):
     def test_members_module_cache_busts_qlogo(self) -> None:
         tree = ast.parse((ROOT / 'TodayWaifu' / 'members.py').read_text(encoding='utf-8-sig'))
         functions = [
-            node for node in tree.body
+            node
+            for node in tree.body
             if isinstance(node, ast.FunctionDef)
             and node.name in {'_cache_busted_avatar_url', '_download_member_avatar'}
         ]
@@ -551,7 +551,7 @@ class QqOfficialConfigContractTests(unittest.TestCase):
         for function_name in ('_deliver_role_image', '_deliver_loli_result_image', '_send_local_image'):
             start = source.index(f'async def {function_name}(')
             next_function = source.find('\nasync def ', start + 1)
-            block = source[start:next_function if next_function >= 0 else None]
+            block = source[start : next_function if next_function >= 0 else None]
             self.assertIn('_try_send_official_qq_image(', block)
 
     def test_config_reads_bind_to_the_third_page_instance(self) -> None:

@@ -16,6 +16,7 @@
 因此本文件显式关闭 E402 / F401 / I001 —— 自动排序会打乱上述加载顺序，导入失败
 或命令优先级错乱，故这两条 lint 规则在此处不适用。
 """
+
 from gsuid_core.sv import Plugins
 
 Plugins(
@@ -25,15 +26,17 @@ Plugins(
 )
 
 # 导入顺序即为命令加载顺序，且不可重排（详见模块文档字符串）
-from . import shared       # 公共层：SV 实例、数据模型、工具函数
-from . import help         # 帮助命令 + register_help（须在 daily 之前）
+from . import shared  # 公共层：SV 实例、数据模型、工具函数
+from . import fun  # 娱乐功能：签到积分 / 打卡运势 / 鹿扣日历 / 塔罗 / GIF / 群聊游戏 / 问候推送
+from . import help  # 帮助命令 + register_help（须在 daily 之前）
 from . import normal_wife  # 普通老婆远程图库
-from . import daily        # 每日抽取 / 列表 / 娶群友 / 老公
-from . import pgr          # 战双本地图库抽取
-from . import rob          # 抢老婆
-from . import gift         # 送老婆
-from . import divorce      # 离婚
-from . import loli         # 萝莉 / 下载
-from . import shota        # 今日正太（远程图库）
+from . import daily  # 每日抽取 / 列表 / 娶群友 / 老公
+from . import pgr  # 战双本地图库抽取
+from . import rob  # 抢老婆
+from . import gift  # 送老婆
+from . import divorce  # 离婚
+from . import loli  # 萝莉 / 下载
+from . import shota  # 今日正太（远程图库）
 from . import custom_role  # 自定义老婆
-from . import status       # core状态统计
+from . import status  # core状态统计
+from . import points  # 积分接入层（复用 fun 子包的积分数据表）

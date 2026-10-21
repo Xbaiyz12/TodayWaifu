@@ -4,6 +4,7 @@
 候选链一旦命中即返回，全部落空则返回 None 或可写目录，由调用方决定降级行为；
 此处不复制、不创建内置资源，以免掩盖配置错误或污染用户数据目录。
 """
+
 from __future__ import annotations
 
 import random

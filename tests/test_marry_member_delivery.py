@@ -1,4 +1,5 @@
 """娶群友统一投递的回归：单头像，以及受开关控制的群聊提及。"""
+
 from __future__ import annotations
 
 import ast
@@ -11,8 +12,7 @@ from unittest.mock import AsyncMock
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_FILES = {
-    name: ROOT / 'TodayWaifu' / name
-    for name in ('senders.py', 'qq_official.py', 'delivery.py', 'members.py')
+    name: ROOT / 'TodayWaifu' / name for name in ('senders.py', 'qq_official.py', 'delivery.py', 'members.py')
 }
 
 
@@ -30,12 +30,20 @@ def _markdown(text: str, buttons: object = None) -> list[_Message]:
 def _load_delivery(config: dict[str, Any]) -> tuple[dict[str, Any], list[str], AsyncMock]:
     """运行真实投递与发送兼容函数，仅隔离框架引导、图片编码和外部 I/O。"""
     functions = {
-        '_send_marry_member_result_image', '_fetch_member_avatar_bytes',
-        '_send_plain_member_avatar', '_qq_bot_mode_enabled',
-        '_is_official_qq_bot', '_is_official_qq_event', '_markdown_escape',
-        '_safe_send', '_adapt_mentions_for_platform', '_remove_private_mentions',
+        '_send_marry_member_result_image',
+        '_fetch_member_avatar_bytes',
+        '_send_plain_member_avatar',
+        '_qq_bot_mode_enabled',
+        '_is_official_qq_bot',
+        '_is_official_qq_event',
+        '_markdown_escape',
+        '_safe_send',
+        '_adapt_mentions_for_platform',
+        '_remove_private_mentions',
         '_is_at_message',
-        '_resolve_member_avatar', '_valid_member_text', '_qq_avatar_url',
+        '_resolve_member_avatar',
+        '_valid_member_text',
+        '_qq_avatar_url',
         '_read_legacy_member_avatar',
     }
     constants = {'QQ_OFFICIAL_BOT_IDS'}
@@ -67,7 +75,8 @@ def _load_delivery(config: dict[str, Any]) -> tuple[dict[str, Any], list[str], A
     namespace: dict[str, Any] = {
         'Message': _Message,
         'MessageSegment': SimpleNamespace(
-            at=lambda user_id: _Message('at', user_id), markdown=_markdown,
+            at=lambda user_id: _Message('at', user_id),
+            markdown=_markdown,
         ),
         '_cfg': lambda key: config.get(key),
         '_cfg_bool': lambda key, default=False: bool(config.get(key, default)),
@@ -104,26 +113,16 @@ class MarryMemberDeliveryTests(unittest.IsolatedAsyncioTestCase):
         escaped = '你今天娶到的群友是 a\\*b\\_c\\[d\\]'
         image = ('image', b'MEMBER_AVATAR')
         cases = [
-            ('official', True, 'qqgroup:1', True, True, 'U1', text,
-             [('markdown', f'<@U1>\n\n{escaped}'), image]),
-            ('official-guild', True, 'qqguild:1', True, True, 'U1', text,
-             [('markdown', f'<@U1>\n\n{escaped}'), image]),
-            ('mode-off', False, 'qqgroup:1', True, True, 'U1', text,
-             [('at', 'U1'), '\n', text, image]),
-            ('mode-unset', None, 'qqgroup:1', True, True, 'U1', text,
-             [('at', 'U1'), '\n', text, image]),
-            ('personal-account', True, 'onebot:1', True, True, 'U1', text,
-             [('at', 'U1'), '\n', text, image]),
-            ('mentions-off', True, 'qqgroup:1', False, True, 'U1', text,
-             [text, image]),
-            ('direct', True, 'qqgroup:1', True, False, 'U1', text,
-             [text, image]),
-            ('no-user', True, 'qqgroup:1', True, True, None, text,
-             [text, image]),
-            ('official-no-text', True, 'qqgroup:1', True, True, 'U1', None,
-             [('markdown', '<@U1>'), image]),
-            ('personal-no-text', False, 'onebot:1', True, True, 'U1', None,
-             [('at', 'U1'), '\n', image]),
+            ('official', True, 'qqgroup:1', True, True, 'U1', text, [('markdown', f'<@U1>\n\n{escaped}'), image]),
+            ('official-guild', True, 'qqguild:1', True, True, 'U1', text, [('markdown', f'<@U1>\n\n{escaped}'), image]),
+            ('mode-off', False, 'qqgroup:1', True, True, 'U1', text, [('at', 'U1'), '\n', text, image]),
+            ('mode-unset', None, 'qqgroup:1', True, True, 'U1', text, [('at', 'U1'), '\n', text, image]),
+            ('personal-account', True, 'onebot:1', True, True, 'U1', text, [('at', 'U1'), '\n', text, image]),
+            ('mentions-off', True, 'qqgroup:1', False, True, 'U1', text, [text, image]),
+            ('direct', True, 'qqgroup:1', True, False, 'U1', text, [text, image]),
+            ('no-user', True, 'qqgroup:1', True, True, None, text, [text, image]),
+            ('official-no-text', True, 'qqgroup:1', True, True, 'U1', None, [('markdown', '<@U1>'), image]),
+            ('personal-no-text', False, 'onebot:1', True, True, 'U1', None, [('at', 'U1'), '\n', image]),
             ('direct-no-text', True, 'qqgroup:1', True, False, 'U1', None, image),
         ]
         for label, mode, platform, at_user, group, user_id, caption, expected in cases:
@@ -135,17 +134,26 @@ class MarryMemberDeliveryTests(unittest.IsolatedAsyncioTestCase):
                 sent = AsyncMock()
                 bot = SimpleNamespace(
                     ev=SimpleNamespace(
-                        real_bot_id=platform, bot_id=platform, user_id='U1',
-                        user_type='group' if group else 'direct', bot_self_id='BOT',
+                        real_bot_id=platform,
+                        bot_id=platform,
+                        user_id='U1',
+                        user_type='group' if group else 'direct',
+                        bot_self_id='BOT',
                         sender={'avatar': 'https://avatar.test/CALLER'},
                     ),
                     send=sent,
                 )
                 member = SimpleNamespace(
-                    name='a*b_c[d]', user_id='U2', avatar='https://avatar.test/MEMBER',
+                    name='a*b_c[d]',
+                    user_id='U2',
+                    avatar='https://avatar.test/MEMBER',
                 )
                 await namespace['_send_marry_member_result_image'](
-                    bot, member, caption, user_id, group,
+                    bot,
+                    member,
+                    caption,
+                    user_id,
+                    group,
                 )
                 self.assertEqual(sent.await_count, 1)
                 self.assertEqual(_outgoing(sent.await_args.args[0]), expected)
@@ -172,7 +180,8 @@ class MarryMemberDeliveryTests(unittest.IsolatedAsyncioTestCase):
                     avatar.write_bytes(contents)
                     member = SimpleNamespace(user_id='OPENID_ABC', avatar=str(avatar))
                     self.assertEqual(
-                        await namespace['_fetch_member_avatar_bytes'](member), contents,
+                        await namespace['_fetch_member_avatar_bytes'](member),
+                        contents,
                     )
                     self.assertEqual(avatar.read_bytes(), contents)
 
@@ -192,7 +201,8 @@ class MarryMemberDeliveryTests(unittest.IsolatedAsyncioTestCase):
                     member = SimpleNamespace(user_id='OPENID_ABC', avatar=str(path))
                     self.assertIsNone(await namespace['_fetch_member_avatar_bytes'](member))
             self.assertEqual(
-                {path.name: path.stat().st_size for path in folder.iterdir()}, before,
+                {path.name: path.stat().st_size for path in folder.iterdir()},
+                before,
             )
 
         self.assertEqual(downloads, [])
@@ -200,19 +210,28 @@ class MarryMemberDeliveryTests(unittest.IsolatedAsyncioTestCase):
     async def test_unavailable_avatar_gives_one_error_without_extra_network_requests(self) -> None:
         for avatar in ('', 'https://avatar.test/missing'):
             with self.subTest(avatar=avatar):
-                namespace, downloads, upload = _load_delivery({
-                    'DailyWifeQqBotMode': True, 'DailyWifeAtUser': True,
-                })
+                namespace, downloads, upload = _load_delivery(
+                    {
+                        'DailyWifeQqBotMode': True,
+                        'DailyWifeAtUser': True,
+                    }
+                )
                 sent = AsyncMock()
                 bot = SimpleNamespace(
                     ev=SimpleNamespace(
-                        real_bot_id='qqgroup:1', bot_id='qqgroup:1', user_type='group',
+                        real_bot_id='qqgroup:1',
+                        bot_id='qqgroup:1',
+                        user_type='group',
                     ),
                     send=sent,
                 )
                 member = SimpleNamespace(name='群友', user_id='U2', avatar=avatar)
                 await namespace['_send_marry_member_result_image'](
-                    bot, member, '结果文案', 'U1', True,
+                    bot,
+                    member,
+                    '结果文案',
+                    'U1',
+                    True,
                 )
                 sent.assert_awaited_once_with('本地群友头像文件不存在，请稍后重试。')
                 self.assertEqual(downloads, [avatar] if avatar else [])

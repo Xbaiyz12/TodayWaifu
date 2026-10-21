@@ -69,6 +69,7 @@ class AsyncSourceCache(Generic[T]):
         task = self._inflight.get(key)
         if task is None:
             epoch = self._epochs.get(key, 0)
+
             async def load() -> T:
                 try:
                     value = await loader()

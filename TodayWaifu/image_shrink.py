@@ -13,6 +13,7 @@
 
 本模块只依赖标准库与 Pillow，可独立加载（测试用 importlib 直接加载）。
 """
+
 from __future__ import annotations
 
 import io
@@ -47,9 +48,7 @@ def _output_format() -> str:
 
 
 def _prepare(opened: Image.Image, fmt: str) -> Image.Image:
-    has_alpha = opened.mode in ('RGBA', 'LA', 'PA') or (
-        opened.mode == 'P' and 'transparency' in opened.info
-    )
+    has_alpha = opened.mode in ('RGBA', 'LA', 'PA') or (opened.mode == 'P' and 'transparency' in opened.info)
     if fmt == 'WEBP':
         # WebP 支持 alpha，保留透明通道
         return opened.convert('RGBA' if has_alpha else 'RGB')

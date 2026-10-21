@@ -17,11 +17,7 @@ def _load_constants_functions(*names: str) -> dict[str, Any]:
     # 只抽取目标函数并注入替身：constants.py 顶部有相对 import，整文件执行需要
     # gsuid_core 环境。_apply_no_r18 依赖 _no_r18_enabled，两者一起抽取。
     tree = ast.parse(CONSTANTS_PATH.read_text(encoding='utf-8'))
-    wanted = [
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name in names
-    ]
+    wanted = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name in names]
     module = ast.Module(
         body=[
             ast.ImportFrom(module='__future__', names=[ast.alias('annotations')], level=0),
@@ -39,11 +35,7 @@ def _url_builder(path: Path, name: str, no_r18: bool) -> Any:
     """抽取某个地址构造函数，注入固定开关值。"""
     source = path.read_text(encoding='utf-8')
     tree = ast.parse(source)
-    function = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == name
-    )
+    function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
     module = ast.Module(
         body=[
             ast.ImportFrom(module='__future__', names=[ast.alias('annotations')], level=0),
@@ -125,11 +117,7 @@ class UrlBuilderWiringTests(unittest.TestCase):
         ):
             source = (PACKAGE / module).read_text(encoding='utf-8')
             tree = ast.parse(source)
-            function = next(
-                node
-                for node in tree.body
-                if isinstance(node, ast.FunctionDef) and node.name == builder
-            )
+            function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == builder)
             body = ast.unparse(function)
             self.assertNotIn('_apply_no_r18', body, f'{module} 不应接入 R18 开关')
 
